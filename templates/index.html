@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Real-Time Weather Stations Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body>
+    <header>
+        <h1>Real-Time Weather Stations Map</h1>
+        <img src="static/images/logo_parthenope.png" alt="Logo" class="logo">
+        <!--
+        <button id="toggle-temp" class="toggle-temp">°C / °F</button>
+        -->
+    </header>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    <div id="iframe-container" style="display: none; flex-wrap: wrap;">
+        <h3 id="ws-title" style="text-align: center; width: 100%;">WS Title</h3>
+        <iframe id="grafana-iframe" src="" frameborder="0"></iframe>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Weather Stations UniParthenope</p>
+        <!--
+        <p class="disclaimer">Disclaimer: The data collected and provided through these stations are intended for educational and study purposes. Although the university makes every effort to ensure the accuracy and reliability of the weather information collected, we cannot guarantee the complete accuracy or constant updating of the data.<br>Users of the data provided by the weather stations should be aware that:<br>
+            - The data are provided "as is" and without warranty of any kind, expressed or implied.<br>
+            - The university assumes no responsibility for any damage or loss resulting from the use of the information provided by the weather station.<br>
+            - Users are urged to verify the data with other sources and not to rely solely on it for critical decisions, such as those related to safety or emergency management.
+        </p>
+        -->
+    </footer>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="static/js/script.js"></script>
+</body>
+</html>
