@@ -34,7 +34,7 @@ fetch('/coordinates')
                     <strong>Temperatura:</strong> ${temperature.toFixed(2)}°C<br>
                     <strong>Umidità:</strong> ${ws.HumIn}%<br>
                     <strong>Posizione:</strong> ${ws.longitude}, ${ws.latitude}<br>
-                    <img style="width:25px;" src="static/chart.png" onclick="openIcon('${key}','${ws.place}')">
+                    <img style="width:25px;" src="static/icons/chart.png" onclick="openIcon('${key}','${ws.place}')">
                 </div>
             `;
             iconPath = 'static/icons/' + ws.type + '.png'
