@@ -6,36 +6,43 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+function startsWithNumber(str) {
+    return /^\d/.test(str);
+}
 
 fetch('/coordinates')
     .then(response => response.json())
-    .then(data => {
-        console.log(data);
-        Object.keys(data).forEach(key => {
-            let coord = data[key]
-            let temperature = (coord.TempIn - 32) * 5/9;
-            /*
-            if (isCelsius == true){
-                temperature = (coord.TempIn - 32) * 5/9;
+    .then(rawData => {
+        console.log(rawData);
+        Object.keys(rawData).forEach(key => {
+            let ws = rawData[key]
+            let temperature = (ws.TempIn - 32) * 5/9;
+            var imgPath = `static/images/${key}.jpg`
+
+            if (startsWithNumber(key)){
+                imgPath = "static/images/work.png"
             }
-            else {
-                temperature = coord.TempIn
-            }*/
+
             var popupContent = `
                 <div>
-                    <strong>${coord.place}</strong><br>
+                    <strong>${ws.place}</strong><br>
                     ${key}<br>
-                    <img style="width:125px;" src="static/images/${key}.jpg"><br>
-                    DAVIS Vantage Pro 2<br>
-                    <strong>Installazione:</strong> 07/05/2024<br>
+                    <img style="width:125px;" src="${imgPath}"><br>
+                    ${ws.model}<br>
+                    <strong>Ente Ospitante:</strong> ${ws.ente}<br>
+                    <strong>Installazione:</strong> ${ws.installed}<br>
                     <strong>Temperatura:</strong> ${temperature.toFixed(2)}°C<br>
-                    <strong>Umidità:</strong> ${coord.HumIn}%<br>
-                    <strong>Posizione:</strong> ${coord.longitude}, ${coord.latitude}<br>
-		    <img style="width:25px;" src="static/images/chart.png" onclick="openIcon('${key}','${coord.place}')">
+                    <strong>Umidità:</strong> ${ws.HumIn}%<br>
+                    <strong>Posizione:</strong> ${ws.longitude}, ${ws.latitude}<br>
+                    <img style="width:25px;" src="static/chart.png" onclick="openIcon('${key}','${ws.place}')">
                 </div>
             `;
-
-            let marker = L.marker([coord.longitude, coord.latitude]).addTo(map);
+            iconPath = 'static/icons/' + ws.type + '.png'
+            var customIcon = new L.icon({iconUrl: iconPath,
+                                        iconSize:     [40, 40],
+                                        iconAnchor:   [0, 10],
+                                        });
+            let marker = L.marker([ws.longitude, ws.latitude], {icon: customIcon}).addTo(map);
             marker.bindPopup(popupContent);
         });
     });
@@ -43,6 +50,7 @@ fetch('/coordinates')
 function openIcon(url, place) {
     let wsTitle = document.getElementById('ws-title');
     wsTitle.innerHTML = place;
+
     let mapContainer = document.getElementById('map-container');
     let iframeContainer = document.getElementById('iframe-container');
     let grafanaIframe = document.getElementById('grafana-iframe');
