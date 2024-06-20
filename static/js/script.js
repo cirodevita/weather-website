@@ -48,9 +48,6 @@ fetch('/coordinates')
     });
 
 function openIcon(url, place) {
-    let wsTitle = document.getElementById('ws-title');
-    wsTitle.innerHTML = place;
-
     let mapContainer = document.getElementById('map-container');
     let iframeContainer = document.getElementById('iframe-container');
     let grafanaIframe = document.getElementById('grafana-iframe');
