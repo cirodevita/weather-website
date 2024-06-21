@@ -9,7 +9,7 @@ html, body {
 }
 
 header {
-    background-color: #002855;
+    background-color: #07598D;
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -68,7 +68,7 @@ header .toggle-temp:hover {
 }
 
 footer {
-    background-color: #002855;
+    background-color: #07598D;
     color: white;
     text-align: center;
     padding: 10px 20px;
