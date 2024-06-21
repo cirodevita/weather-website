@@ -22,10 +22,10 @@ coordinates = [
         [40.745833 ,13.941, "Ischia", "tidegauge_off", "Mareografo"],
         [40.7161  ,14.4747 , "Marina di Stabia", "tidegauge_off", "Mareografo"],
 
-        [40.6188 ,14.3247, "Scoglio Vervece ", "wavebuoy_off", "Ondametro"],
+        [40.6188 ,14.3047, "Scoglio Vervece ", "wavebuoy_off", "Ondametro"],
         [40.745833  ,13.940556 , "Ischia", "wavebuoy_off", "Ondametro"],
 
-        [40.6188 ,14.3251, "Scoglio Vervece ", "mooring_off", "Mooring"],
+        [40.6188 ,14.3371, "Scoglio Vervece ", "mooring_off", "Mooring"],
         
         [40.7714 ,14.0952, "Miseno", "owbuoy_off", "Boa Meteo-Oceanografica"],
 

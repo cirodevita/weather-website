@@ -10,6 +10,9 @@ let legend = L.control({position: 'topright'});
 
 legend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML +=  '<img src="static/images/logo_most.png" style="width:150px;"><br>'
+    div.innerHTML +=  '<img src="static/images/logo_parthenope_black.png" style="width:150px;"><br><br><br>'
+    
     div.innerHTML +=  '<img src="static/icons/ws_on.png" style="width:15px;">' + '     Stazione Meteorologica' + '<br>'
     div.innerHTML +=  '<img src="static/icons/radar_off.png" style="width:15px;">' + '     Radar Meteorologico' + '<br>'
     div.innerHTML +=  '<img src="static/icons/tidegauge_off.png" style="width:15px;">' + '     Mareografo' + '<br>'
@@ -17,7 +20,8 @@ legend.onAdd = function (map) {
     div.innerHTML +=  '<img src="static/icons/mooring_off.png" style="width:15px;">' + '     Mooring' + '<br>'
     div.innerHTML +=  '<img src="static/icons/owbuoy_off.png" style="width:15px;">' + '     Boa Meteo-Oceanografica ' + '<br>'
     div.innerHTML +=  '<img src="static/icons/hf_off.png" style="width:15px;">' + '     HF Radar' + '<br>'
-    div.innerHTML +=  '<img src="static/icons/glider_off.png" style="width:15px;">' + '     Glider' + '<br>'
+    div.innerHTML +=  '<img src="static/icons/glider_off.png" style="width:15px;">' + '     Glider' + ''
+    
 
 
 
@@ -64,6 +68,7 @@ fetch('/coordinates')
                     ente = `<strong>Ente Ospitante:</strong> Castel Sant'Elmo<br>`
                     temperatures = `<strong>Tipo di Precipitazione:</strong> N/A<br>`
                     model = `WR-10X `
+                    installed = `<strong>Installazione:</strong> 2011<br>`
 
                 }
                 if (key == 11){
