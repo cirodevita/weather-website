@@ -18,11 +18,11 @@ coordinates = [
         [40.8435 ,14.2394, "Castel Sant’Elmo", "radar_off", "Weather Radar"],
         [41.0486 ,15.2329, "Trevico (AV)", "radar_off", "Weather Radar"],
 
-        [40.745833 ,13.940556, "Ischia", "mareografo_off", "Tide gauge (Mareografi)"],
-        [40.7161  ,14.4747 , "Marina di Stabia", "mareografo_off", "Tide gauge (Mareografi)"],
+        [40.745833 ,13.940556, "Ischia", "tidegauge_off", "Tide gauge (Mareografi)"],
+        [40.7161  ,14.4747 , "Marina di Stabia", "tidegauge_off", "Tide gauge (Mareografi)"],
 
-        [40.6188 ,14.3247, "Scoglio Vervece ", "ondametro_off", "Wavebuoy (Ondametri)"],
-        [40.745833  ,13.940556 , "Ischia", "ondametro_off", "Wavebuoy (Ondametri)"],
+        [40.6188 ,14.3247, "Scoglio Vervece ", "wavebuoy_off", "Wavebuoy (Ondametri)"],
+        [40.745833  ,13.940556 , "Ischia", "wavebuoy_off", "Wavebuoy (Ondametri)"],
 
         [40.6188 ,14.3247, "Scoglio Vervece ", "mooring_off", "Mooring"],
         
@@ -49,7 +49,7 @@ def getOfflineStations(coordinates):
         staticStations[str(idx)]['place'] = coordinate[2]
         staticStations[str(idx)]['installed'] = "Not Installed!"
         staticStations[str(idx)]['model'] = "N/A"
-        staticStations[str(idx)]['type'] = "ws_off"
+        staticStations[str(idx)]['type'] = coordinate[3]
         staticStations[str(idx)]['ente'] = "N/A",
         staticStations[str(idx)]['typology'] = coordinate[4]
         
@@ -116,4 +116,4 @@ def get_coordinates():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True)
