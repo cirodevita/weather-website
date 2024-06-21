@@ -79,3 +79,9 @@ footer .disclaimer {
     margin-top: 10px;
     font-size: 0.8em;
 }
+
+.legend {
+    background-color: #fff;
+    padding: 10px;
+    line-height: 1.5;
+}

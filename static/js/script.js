@@ -1,9 +1,9 @@
 // var isCelsius;
 let map = L.map('map').setView([40.8564635, 14.2846362], 10);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    attribution: 'Tiles &copy; Esri'
 }).addTo(map);
 
 let legend = L.control({position: 'topright'});
