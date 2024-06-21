@@ -25,6 +25,7 @@ fetch('/coordinates')
 
             var popupContent = `
                 <div>
+                    ${ws.typology}<br>
                     <strong>${ws.place}</strong><br>
                     ${key}<br>
                     <img style="width:125px;" src="${imgPath}"><br>

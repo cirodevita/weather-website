@@ -6,15 +6,35 @@ import requests
 fields = ['latitude', 'longitude', 'TempIn', 'HumIn', 'place']
 
 coordinates = [
-        (40.84431667,14.23892778),
-        (40.79166667 ,14.18694444),
-        (40.936502,14.729150),
-        (40.938759,14.725191),
-        (40.6056513,14.3637172),
-        (40.76666667,14.03333336),
-        (40,716, 13.8666),
-        (40.549238 ,14.2323)
+        [40.84431667,14.23892778, "Castel Sant'Elmo (NA)", "ws_off", "Weather Station"],
+        [40.79166667 ,14.18694444, "Gaiola", "ws_off", "Weather Station"],
+        [40.936502,14.729150, "Montevergine", "ws_off", "Weather Station"],
+        [40.938759,14.725191, "Montevergine alto", "ws_off", "Weather Station"],
+        [40.6056513,14.3637172, "Sant'Agata (Sorrento)", "ws_off", "Weather Station"],
+        [40.76666667,14.03333336, "Procida", "ws_off", "Weather Station"],
+        [40,716, 13.8666, "Ischia", "ws_off", "Weather Station"],
+        [40.549238 ,14.2323, "Capri", "ws_off", "Weather Station"],
 
+        [40.8435 ,14.2394, "Castel Sant’Elmo", "radar_off", "Weather Radar"],
+        [41.0486 ,15.2329, "Trevico (AV)", "radar_off", "Weather Radar"],
+
+        [40.745833 ,13.940556, "Ischia", "mareografo_off", "Tide gauge (Mareografi)"],
+        [40.7161  ,14.4747 , "Marina di Stabia", "mareografo_off", "Tide gauge (Mareografi)"],
+
+        [40.6188 ,14.3247, "Scoglio Vervece ", "ondametro_off", "Wavebuoy (Ondametri)"],
+        [40.745833  ,13.940556 , "Ischia", "ondametro_off", "Wavebuoy (Ondametri)"],
+
+        [40.6188 ,14.3247, "Scoglio Vervece ", "mooring_off", "Mooring"],
+        
+        [40.7714 ,14.0952, "Miseno", "owbuoy_off", "Ocean-Weather buoy (Boa Multiparametrica)"],
+
+        [41.2463 ,13.5897, "Formia", "hf_off", "HF Radar System"],
+        [41.2463 ,13.4230, "Ventotene", "hf_off", "HF Radar System"],
+        [40.7798 ,14.088, "Miseno", "hf_off", "HF Radar System"],
+        [40.8122 ,14.3344, "Portici", "hf_off", "HF Radar System"],
+        [40.6982 ,14.4809, "Castellammare", "hf_off", "HF Radar System"],
+
+        [40.6915 ,14.2072, "Glider", "glider_off", "Glider"]
         ]
 
 def getOfflineStations(coordinates):
@@ -26,11 +46,12 @@ def getOfflineStations(coordinates):
         staticStations[str(idx)]['latitude'] = coordinate[1]
         staticStations[str(idx)]['TempIn'] = "N/A"
         staticStations[str(idx)]['HumIn'] = "N/A"
-        staticStations[str(idx)]['place'] = "Not Installed!"
+        staticStations[str(idx)]['place'] = coordinate[2]
         staticStations[str(idx)]['installed'] = "Not Installed!"
-        staticStations[str(idx)]['model'] = "DAVIS Vantage Pro 2"
+        staticStations[str(idx)]['model'] = "N/A"
         staticStations[str(idx)]['type'] = "ws_off"
-        staticStations[str(idx)]['ente'] = "N/A"
+        staticStations[str(idx)]['ente'] = "N/A",
+        staticStations[str(idx)]['typology'] = coordinate[4]
         
 
     return staticStations
@@ -66,6 +87,7 @@ def getStations():
             stations[record.values.get("topic")]['model'] = "DAVIS Vantage Pro 2"
             stations[record.values.get("topic")]['installed'] = "11/05/2024"
             stations[record.values.get("topic")]['ente'] = "Marina"
+            stations[record.values.get("topic")]['typology'] = "Weather Station"
 
     print(stations | offlineStations)
     return stations | offlineStations
