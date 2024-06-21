@@ -87,7 +87,7 @@ def getStations():
             stations[record.values.get("topic")]['type'] = "ws_on"
             stations[record.values.get("topic")]['model'] = "DAVIS Vantage Pro 2"
             stations[record.values.get("topic")]['installed'] = "11/05/2024"
-            stations[record.values.get("topic")]['ente'] = "Marina"
+            stations[record.values.get("topic")]['ente'] = ""
             stations[record.values.get("topic")]['typology'] = "Weather Station"
 
     print(stations | offlineStations)
