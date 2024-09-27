@@ -1,32 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <base target="_top">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Real-Time Monitoring Network</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
-    <link rel="stylesheet" href="static/css/style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-</head>
-<body>
-    <header>
-        <h1>Real-Time Monitoring Network</h1>
-        
-        
-    </header>
-    <div id="map-container">
-        <div id="map"></div>
-    </div>
-    <div id="iframe-container">
-        <iframe id="grafana-iframe" src="" frameborder="0"></iframe>
-    </div>
-    <footer>
-        <p>&copy; 2024 Real-Time Monitoring Network UniParthenope</p>
-    </footer>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="static/js/script.js"></script>
-</body>
+    <head>
+        <base target="_top">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Real-Time Monitoring Network</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+        <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+        <link rel="stylesheet" href="static/css/index.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    </head>
+
+    <body>
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Welcome Back</h2>
+                <form id="login-form" action="/login" method="POST">
+                    <div class="input-container">
+                        <input type="text" id="username" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-container">
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="modal-submit-btn">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <header>
+            <h1>Real-Time Monitoring Network</h1>
+            <div class="user-section">
+                {% if current_user.is_authenticated %}
+                    <span>Welcome, {{ current_user.username }}!</span>
+                    <a href="{{ url_for('admin') }}" class="admin-button">Dashboard</a>
+                    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                {% else %}
+                    <button id="login-btn" class="login-button">Login</button>
+                {% endif %}
+            </div>
+        </header>
+        <div id="map-container">
+            <div id="map"></div>
+        </div>
+        <div id="iframe-container">
+            <iframe id="grafana-iframe" src="" frameborder="0"></iframe>
+        </div>
+        <footer>
+            <p>&copy; 2024 Real-Time Monitoring Network UniParthenope</p>
+        </footer>
+
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <script src="static/js/index.js"></script>
+    </body>
 </html>

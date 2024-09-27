@@ -1,3 +1,10 @@
 flask
+flask-login
+flask_sqlalchemy
+flask_bcrypt
+Flask-Migrate
 influxdb_client
 requests
+psycopg2
+psycopg2-binary
+python-dotenv

@@ -1,0 +1,253 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #07598D;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header .logo-container {
+    display: flex;
+    align-items: center;
+}
+
+header .logo, header .second-logo {
+    height: 50px;
+    margin-left: 20px;
+}
+
+header .toggle-temp {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+header .toggle-temp:hover {
+    background-color: #45a049;
+}
+
+#map-container {
+    flex: 1;
+    width: 100%;
+    transition: height 0.5s;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+#iframe-container {
+    flex: 1;
+    width: 100%;
+    display: none;
+}
+
+#iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+footer {
+    background-color: #07598D;
+    color: white;
+    text-align: center;
+    padding: 10px 20px;
+    width: 100%;
+}
+
+footer .disclaimer {
+    margin-top: 10px;
+    font-size: 0.8em;
+}
+
+.legend {
+    background-color: #fff;
+    padding: 10px;
+    line-height: 1.5;
+}
+
+button, .admin-button, .logout-button, .login-button {
+    padding: 10px 20px;
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+}
+
+button:hover, .admin-button:hover, .logout-button:hover, .login-button:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-button {
+    margin-left: 10px;
+}
+
+.logout-button {
+    margin-left: 10px;
+    background-color: #f44336;
+}
+
+.logout-button:hover {
+    background-color: #d32f2f;
+}
+
+.login-button {
+    background-color: #1E90FF;
+}
+
+.login-button:hover {
+    background-color: #0056b3;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 350px;
+    max-width: 90%;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.input-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-container input[type="text"],
+.input-container input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.input-container input[type="text"]:focus,
+.input-container input[type="password"]:focus {
+    border-color: #1E90FF;
+    outline: none;
+}
+
+.modal-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-family: 'Roboto', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.modal-submit-btn:hover {
+    background-color: #0056b3;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: -10px;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-content a {
+    color: #1E90FF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.modal-content a:hover {
+    color: #0056b3;
+}
+
+/* Popup Content Styling */
+.popup-content {
+    display: flex;
+    align-items: flex-start;
+    font-family: 'Roboto', sans-serif;
+}
+
+.popup-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 8px;
+}
+
+.popup-details {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.popup-details b {
+    color: #333;
+}

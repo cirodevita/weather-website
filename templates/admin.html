@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Instruments</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Dashboard</h1>
+        <dev>
+            <a href="{{ url_for('index') }}" class="edit-button">Home</a>
+            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        </dev>
+    </header>
+
+    <section>
+        <h2>All Instruments</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Airlink ID</th>
+                    <th>Image</th>
+                    <th>Organization</th>
+                    <th>Installation Date</th>
+                    <th>Location (Lat, Lon)</th>
+                    <th>Variables</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for instrument in instruments %}
+                <tr>
+                    <td>{{ instrument.id }}</td>
+                    <td>{{ instrument.airlinkID }}</td>
+                    <td><img src="{{ url_for('static', filename='uploads/' ~ instrument.image) }}" alt="Image" width="50"></td>
+                    <td>{{ instrument.organization }}</td>
+                    <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>
+                    <td>{{ instrument.variables }}</td>
+                    <td>{{ instrument.instrument_type }}</td>
+                    <td>
+                        <button class="edit-button" data-id="{{ instrument.id }}">Edit</button>
+                        <button class="delete-button" onclick="window.location.href='{{ url_for('delete_instrument', instrument_id=instrument.id) }}'">Remove</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>        
+        
+        <button id="add-instrument-btn" class="add-button">Add New Instrument</button>
+    </section>
+
+    <!-- Add/Edit Instrument Modal -->
+    <div id="instrument-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Instrument</h2> 
+            <form id="instrument-form" action="/admin" method="POST" enctype="multipart/form-data">
+                <label for="id">Instrument ID (Format: it.uniparthenope.meteo.xxx)</label>
+                <input type="text" id="instrument-id" name="id" required>
+
+                <label for="airlinkID">Airlink ID</label>
+                <input type="text" id="airlinkID" name="airlinkID">
+
+                <label for="image">Image (Drag and Drop or Click)</label>
+                <div id="drop-area">
+                    <input type="file" id="image" name="image" accept="image/*">
+                </div>
+
+                <label for="organization">Organization</label>
+                <input type="text" id="organization" name="organization" required>
+
+                <label for="installation_date">Installation Date</label>
+                <input type="date" id="installation_date" name="installation_date" required>
+
+                <label for="latitude">Latitude</label>
+                <input type="number" step="any" id="latitude" name="latitude" required>
+
+                <label for="longitude">Longitude</label>
+                <input type="number" step="any" id="longitude" name="longitude" required>
+
+                <label for="variables">Variables (comma-separated)</label>
+                <input type="text" id="variables" name="variables" required>
+
+                <label for="instrument_type">Instrument Type</label>
+                <input type="text" id="instrument_type" name="instrument_type" required>
+
+                <button type="submit" id="modal-submit-btn" class="modal-submit-btn">Add Instrument</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

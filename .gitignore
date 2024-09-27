@@ -1,2 +1,5 @@
 venv/
+migrations/
 .DS_Store
+static/uploads
+.env
