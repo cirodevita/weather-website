@@ -71,7 +71,6 @@ footer {
     background-color: #07598D;
     color: white;
     text-align: center;
-    padding: 10px 20px;
     width: 100%;
 }
 
@@ -228,7 +227,6 @@ button:hover, .admin-button:hover, .logout-button:hover, .login-button:hover {
     color: #0056b3;
 }
 
-/* Popup Content Styling */
 .popup-content {
     display: flex;
     align-items: flex-start;

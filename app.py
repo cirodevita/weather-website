@@ -35,16 +35,70 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+instrument_types = {
+    "ws_on": {
+        "name": "Stazione Meteorologica",
+        "variables": "TempOut, HumOut, WindSpeed, WindDir, RainRate, Barometer"
+    }
+}
+
+def handle_file_upload(file):
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return filename
+    return None
+
+def create_or_update_instrument(data, is_edit=False):
+    instrument_id = data.get('id')
+    airlinkID = data.get('airlinkID')
+    organization = data.get('organization')
+    installation_date = datetime.strptime(data.get('installation_date'), '%Y-%m-%d')
+    latitude = float(data.get('latitude'))
+    longitude = float(data.get('longitude'))
+    instrument_type = data.get('instrument_type')
+
+    variables = instrument_types.get(instrument_type, {}).get("variables", "")
+
+    image = handle_file_upload(data.get('image'))
+
+    if is_edit:
+        instrument = Instrument.query.get(instrument_id)
+        if not instrument:
+            return None
+        instrument.airlinkID = airlinkID
+        instrument.organization = organization
+        instrument.installation_date = installation_date
+        instrument.latitude = latitude
+        instrument.longitude = longitude
+        instrument.variables = variables
+        instrument.instrument_type = instrument_type
+        if image:
+            instrument.image = image
+    else:
+        instrument = Instrument(
+            id=instrument_id,
+            airlinkID=airlinkID,
+            image=image,
+            organization=organization,
+            installation_date=installation_date,
+            latitude=latitude,
+            longitude=longitude,
+            variables=variables,
+            instrument_type=instrument_type
+        )
+        db.session.add(instrument)
+
+    return instrument
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
-@app.route('/instruments', methods=['GET'])
+@app.route('/instruments', methods=['GET', 'POST'])
 def get_instruments():
-    instruments = Instrument.query.all()
-    instruments_data = []
-
     url = os.getenv("INFLUXDB_URL")
     token = os.getenv("INFLUXDB_TOKEN")
     org = os.getenv("INFLUXDB_ORG")
@@ -53,10 +107,37 @@ def get_instruments():
     client = InfluxDBClient(url=url, token=token, org=org)
     query_api = client.query_api()
 
+    if request.method == 'POST':
+        query = f"""from(bucket: "{bucket}") |> range(start: -3h) |> last() |> distinct(column: "topic")"""
+        tables = query_api.query(query, org=org)
+
+        unique_topics = {record.values.get("topic") for table in tables for record in table.records if record.values.get("topic")}
+
+        imported_count = 0
+        for topic in unique_topics:
+            if not Instrument.query.filter_by(id=topic).first():
+                data = {
+                    'id': topic,
+                    'airlinkID': None,
+                    'organization': "",
+                    'installation_date': datetime.now().strftime('%Y-%m-%d'),
+                    'latitude': 0.0,
+                    'longitude': 0.0,
+                    'instrument_type': "",
+                    'image': None
+                }
+
+                if create_or_update_instrument(data):
+                    imported_count += 1
+
+        db.session.commit()
+        return jsonify({'count': imported_count})
+
     query = f"""from(bucket: "{bucket}") |> range(start: -3h) |> last()"""
-    print(query)
     tables = query_api.query(query, org=org)
 
+    instruments = Instrument.query.all()
+    instruments_data = []
     for instrument in instruments:
         relevant_variables = instrument.variables.split(", ") if instrument.variables else []
 
@@ -69,18 +150,16 @@ def get_instruments():
             'image': f'static/uploads/{instrument.image}' if instrument.image else None
         }
 
-        if relevant_variables:
-            influx_data = {}
-            for table in tables:
-                for record in table.records:
-                    if record.values.get("topic") == instrument.id:
-                        if record.get_field() in relevant_variables:
-                            influx_data[record.get_field()] = record.get_value()
+        influx_data = {}
+        for table in tables:
+            for record in table.records:
+                if record.values.get("topic") == instrument.id:
+                    if record.get_field() in relevant_variables:
+                        influx_data[record.get_field()] = record.get_value()
 
-            instrument_data['variables'] = influx_data
-
+        instrument_data['variables'] = influx_data
         instruments_data.append(instrument_data)
-    
+
     return jsonify(instruments_data)
 
 
@@ -96,54 +175,52 @@ def login():
     return render_template('index.html')
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
     if request.method == 'POST':
-        instrument_id = request.form.get('id')
-        airlinkID = request.form.get('airlinkID')
-        image = request.files.get('image')
+        data = {
+            'id': request.form.get('id'),
+            'airlinkID': request.form.get('airlinkID'),
+            'organization': request.form.get('organization'),
+            'installation_date': request.form.get('installation_date'),
+            'latitude': request.form.get('latitude'),
+            'longitude': request.form.get('longitude'),
+            'instrument_type': request.form.get('instrument_type'),
+            'image': request.files.get('image')
+        }
 
-        if image:
-            filename = secure_filename(image.filename)
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            image_path = filename
-        else:
-            image_path = None
-
-        organization = request.form.get('organization')
-        installation_date = request.form.get('installation_date')
-        latitude = float(request.form.get('latitude'))
-        longitude = float(request.form.get('longitude'))
-        variables = request.form.get('variables')
-        instrument_type = request.form.get('instrument_type')
-
-        new_instrument = Instrument(
-            id=instrument_id,
-            airlinkID=airlinkID,
-            image=image_path,
-            organization=organization,
-            installation_date=datetime.strptime(installation_date, '%Y-%m-%d'),
-            latitude=latitude,
-            longitude=longitude,
-            variables=variables,
-            instrument_type=instrument_type
-        )
-
-        try:
-            db.session.add(new_instrument)
+        if create_or_update_instrument(data):
             db.session.commit()
-            return redirect(url_for('admin'))
-        except IntegrityError:
+        else:
             db.session.rollback()
-            return redirect(url_for('admin'))
+
+        return redirect(url_for('admin'))
 
     instruments = Instrument.query.all()
-    return render_template('admin.html', instruments=instruments)
+    return render_template('admin.html', instruments=instruments, instrument_types=instrument_types)
+
+
+@app.route('/edit/<instrument_id>', methods=['POST'])
+@login_required
+def edit_instrument(instrument_id):
+    data = {
+        'id': request.form.get('id'),
+        'airlinkID': request.form.get('airlinkID'),
+        'organization': request.form.get('organization'),
+        'installation_date': request.form.get('installation_date'),
+        'latitude': request.form.get('latitude'),
+        'longitude': request.form.get('longitude'),
+        'instrument_type': request.form.get('instrument_type'),
+        'image': request.files.get('image')
+    }
+
+    if create_or_update_instrument(data, is_edit=True):
+        db.session.commit()
+    else:
+        db.session.rollback()
+
+    return redirect(url_for('admin'))
 
 
 @app.route('/delete/<instrument_id>', methods=['POST', 'GET'])
@@ -156,58 +233,14 @@ def delete_instrument(instrument_id):
     return redirect(url_for('admin'))
 
 
-@app.route('/edit/<instrument_id>', methods=['POST'])
-@login_required
-def edit_instrument(instrument_id):
-    instrument = Instrument.query.get(instrument_id)
-    if not instrument:
-        return redirect(url_for('admin'))
-
-    new_id = request.form.get('id')
-    airlinkID = request.form.get('airlinkID')
-    organization = request.form.get('organization')
-    installation_date = request.form.get('installation_date')
-    latitude = float(request.form.get('latitude'))
-    longitude = float(request.form.get('longitude'))
-    variables = request.form.get('variables')
-    instrument_type = request.form.get('instrument_type')
-
-    image = request.files.get('image')
-    if image and image.filename != '':
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        instrument.image = filename
-
-    instrument.airlinkID = airlinkID
-    instrument.organization = organization
-    instrument.installation_date = datetime.strptime(installation_date, '%Y-%m-%d')
-    instrument.latitude = latitude
-    instrument.longitude = longitude
-    instrument.variables = variables
-    instrument.instrument_type = instrument_type
-
-    if new_id != instrument.id:
-        id_conflict = Instrument.query.filter_by(id=new_id).first()
-        if id_conflict:
-            return redirect(url_for('edit_instrument', instrument_id=instrument.id))
-
-    instrument.id = new_id
-
-    try:
-        db.session.commit()
-        return redirect(url_for('admin'))
-    except IntegrityError:
-        db.session.rollback()
-        return redirect(url_for('edit_instrument', instrument_id=instrument.id))
-
-
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=8081)
+    app.run(debug=True, host='0.0.0.0', port=8088)

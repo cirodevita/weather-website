@@ -44,38 +44,110 @@ header .toggle-temp:hover {
     background-color: #45a049;
 }
 
-table {
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0px 10px;
+}
+
+.section-header div {
+    display: flex;
+    align-items: center;
+}
+
+.import-button {
+    background-color: #FFA500;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.import-button:hover {
+    background-color: #e69500;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.add-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.add-button:hover {
+    background-color: #45a049;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dataTables_wrapper {
+    padding: 10px;
+}
+
+table.dataTable {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 30px;
-    font-size: 14px;
 }
 
-table thead th {
+table.dataTable th, table.dataTable td {
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+table.dataTable thead th {
     background-color: #07598D;
     color: white;
-    padding: 15px;
-    text-align: left;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    font-weight: bold;
 }
 
-table tbody td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-}
-
-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-table tbody tr:hover {
-    background-color: #e0e0e0;
-}
-
-table tbody td img {
+table.dataTable tbody td img {
     border-radius: 5px;
     width: 50px;
+}
+
+table td .edit-button,
+table td .delete-button {
+    display: inline-block;
+    width: 80px;
+    padding: 8px 0;
+    text-align: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+table td .edit-button {
+    background-color: #1E90FF;
+    color: white;
+}
+
+table td .edit-button:hover {
+    background-color: #0056b3;
+}
+
+table td .delete-button {
+    background-color: #f44336;
+    color: white;
+}
+
+table td .delete-button:hover {
+    background-color: #d32f2f;
+}
+
+table td {
+    text-align: center;
+    vertical-align: middle;
 }
 
 button, .edit-button, .delete-button, .logout-button {
@@ -89,18 +161,6 @@ button, .edit-button, .delete-button, .logout-button {
     text-decoration: none;
 }
 
-.add-button {
-    background-color: #4CAF50;
-    color: white;
-    margin-bottom: 20px;
-    font-size: 16px;
-}
-
-.add-button:hover {
-    background-color: #45a049;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-}
-
 .edit-button {
     background-color: #1E90FF;
     color: white;
@@ -111,7 +171,6 @@ button, .edit-button, .delete-button, .logout-button {
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Delete Button */
 .delete-button, .logout-button {
     background-color: #f44336;
     color: white;
@@ -164,7 +223,6 @@ button, .edit-button, .delete-button, .logout-button {
     color: #333;
 }
 
-/* Modal Form Inputs */
 .modal-content label {
     display: block;
     text-align: left;
@@ -220,4 +278,45 @@ button, .edit-button, .delete-button, .logout-button {
 
 .close:hover {
     color: #f44336;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 16px;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+select:focus {
+    border-color: #1E90FF;
+    box-shadow: 0 0 5px rgba(30, 144, 255, 0.5);
+    outline: none;
+}
+
+select::-ms-expand {
+    display: none;
+}
+
+select:hover {
+    border-color: #1E90FF;
+}
+
+option {
+    padding: 12px;
+    font-size: 16px;
+    background-color: #fff;
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+}
+
+option[value=""][disabled] {
+    display: none;
 }

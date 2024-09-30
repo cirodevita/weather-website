@@ -1,3 +1,15 @@
+document.getElementById('import-btn').addEventListener('click', function() {
+  fetch('/instruments', {
+      method: 'POST',
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    window.location.reload();
+  })
+  .catch(error => console.error('Error importing instruments:', error));
+});
+
 const dropArea = document.getElementById('drop-area');
 const fileInput = document.getElementById('image');
 
@@ -59,7 +71,6 @@ function openModal(instrument = null) {
       document.getElementById("installation_date").value = instrument.installation_date;
       document.getElementById("latitude").value = instrument.latitude;
       document.getElementById("longitude").value = instrument.longitude;
-      document.getElementById("variables").value = instrument.variables;
       document.getElementById("instrument_type").value = instrument.instrument_type;
   } else {
       title.textContent = "Add New Instrument";
@@ -72,7 +83,6 @@ function openModal(instrument = null) {
       document.getElementById("installation_date").value = "";
       document.getElementById("latitude").value = "";
       document.getElementById("longitude").value = "";
-      document.getElementById("variables").value = "";
       document.getElementById("instrument_type").value = "";
   }
 
@@ -109,3 +119,15 @@ window.onclick = function(event) {
   }
 };
 
+$(document).ready(function() {
+  $('table').DataTable({
+      responsive: true,
+      order: [[0, 'asc']],
+      paging: true,
+      searching: true,
+      columnDefs: [
+          { orderable: true, targets: '_all' },
+          { searchable: true, targets: '_all' }
+      ]
+  });
+});

@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Instruments</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 </head>
 <body>
     <header>
@@ -16,8 +20,14 @@
     </header>
 
     <section>
-        <h2>All Instruments</h2>
-        <table>
+        <div class="section-header">
+            <h2>Instruments</h2>
+            <div>
+                <button id="add-instrument-btn" class="add-button">Add New Instrument</button>
+                <button id="import-btn" class="import-button">Import</button>
+            </div>
+        </div>
+        <table class="display">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -26,7 +36,6 @@
                     <th>Organization</th>
                     <th>Installation Date</th>
                     <th>Location (Lat, Lon)</th>
-                    <th>Variables</th>
                     <th>Type</th>
                     <th>Actions</th>
                 </tr>
@@ -40,8 +49,7 @@
                     <td>{{ instrument.organization }}</td>
                     <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>
-                    <td>{{ instrument.variables }}</td>
-                    <td>{{ instrument.instrument_type }}</td>
+                    <td>{{ instrument_types[instrument.instrument_type].name }}</td>
                     <td>
                         <button class="edit-button" data-id="{{ instrument.id }}">Edit</button>
                         <button class="delete-button" onclick="window.location.href='{{ url_for('delete_instrument', instrument_id=instrument.id) }}'">Remove</button>
@@ -49,10 +57,9 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>        
-        
-        <button id="add-instrument-btn" class="add-button">Add New Instrument</button>
+        </table>
     </section>
+       
 
     <!-- Add/Edit Instrument Modal -->
     <div id="instrument-modal" class="modal">
@@ -83,11 +90,13 @@
                 <label for="longitude">Longitude</label>
                 <input type="number" step="any" id="longitude" name="longitude" required>
 
-                <label for="variables">Variables (comma-separated)</label>
-                <input type="text" id="variables" name="variables" required>
-
                 <label for="instrument_type">Instrument Type</label>
-                <input type="text" id="instrument_type" name="instrument_type" required>
+                <select id="instrument_type" name="instrument_type" required>
+                    <option value="" disabled selected>Select an instrument type</option>
+                    {% for key, value in instrument_types.items() %}
+                        <option value="{{ key }}">{{ value['name'] }}</option>
+                    {% endfor %}
+                </select>
 
                 <button type="submit" id="modal-submit-btn" class="modal-submit-btn">Add Instrument</button>
             </form>
