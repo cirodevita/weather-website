@@ -97,4 +97,4 @@ def send_alert(station_id, status):
 
 while True:
     check_station_status()
-    time.sleep(10)
+    time.sleep(60)
