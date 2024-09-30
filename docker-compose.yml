@@ -16,15 +16,20 @@ services:
     command: postgres -c 'max_connections=1000'
 
   web:
-    build: .
+    build: ./app
+    command: python -u app.py
     ports:
       - "8088:8088"
     volumes:
-      - .:/app
+      - ./app:/app
     environment:
       - FLASK_ENV=development
     depends_on:
       - postgres
+
+  alert:
+    build: ./app
+    command: python -u alert.py
 
 volumes:
   postgres_data:

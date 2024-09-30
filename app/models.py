@@ -33,6 +33,7 @@ class Instrument(db.Model):
     variables = db.Column(db.String(255), nullable=False)
     instrument_type = db.Column(db.String(100), nullable=False)
     airlinkID = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String, default='online')
 
     def __init__(self, id, airlinkID, image, organization, installation_date, latitude, longitude, variables, instrument_type):
         self.id = id

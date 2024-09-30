@@ -122,7 +122,7 @@ window.onclick = function(event) {
 $(document).ready(function() {
   $('table').DataTable({
       responsive: true,
-      order: [[0, 'asc']],
+      order: [[1, 'asc']],
       paging: true,
       searching: true,
       columnDefs: [

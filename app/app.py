@@ -30,6 +30,14 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
+instrument_types = {
+    "ws_on": {
+        "name": "Stazione Meteorologica",
+        "variables": "TempOut, HumOut, WindSpeed, WindDir, RainRate, Barometer"
+    }
+}
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
@@ -39,19 +47,13 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-instrument_types = {
-    "ws_on": {
-        "name": "Stazione Meteorologica",
-        "variables": "TempOut, HumOut, WindSpeed, WindDir, RainRate, Barometer"
-    }
-}
-
 def handle_file_upload(file):
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         return filename
     return None
+
 
 def create_or_update_instrument(data, is_edit=False):
     instrument_id = data.get('id')
