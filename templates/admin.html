@@ -49,7 +49,13 @@
                     <td>{{ instrument.organization }}</td>
                     <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>
-                    <td>{{ instrument_types[instrument.instrument_type].name }}</td>
+		    <td>
+        		{% if instrument.instrument_type in instrument_types %}
+            		  {{ instrument_types[instrument.instrument_type].name }}
+        		{% else %}
+            		  Unknown
+        		{% endif %}
+    		    </td>
                     <td>
                         <button class="edit-button" data-id="{{ instrument.id }}">Edit</button>
                         <button class="delete-button" onclick="window.location.href='{{ url_for('delete_instrument', instrument_id=instrument.id) }}'">Remove</button>

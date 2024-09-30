@@ -30,6 +30,10 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
