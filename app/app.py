@@ -99,6 +99,7 @@ def handle_file_upload(file):
 
 def create_or_update_instrument(data, is_edit=False):
     instrument_id = data.get('id')
+    name = data.get('name')
     airlinkID = data.get('airlinkID')
     organization = data.get('organization')
     installation_date = datetime.strptime(data.get('installation_date'), '%Y-%m-%d')
@@ -115,6 +116,7 @@ def create_or_update_instrument(data, is_edit=False):
         if not instrument:
             return None
         instrument.airlinkID = airlinkID
+        instrument.name = name
         instrument.organization = organization
         instrument.installation_date = installation_date
         instrument.latitude = latitude
@@ -126,6 +128,7 @@ def create_or_update_instrument(data, is_edit=False):
     else:
         instrument = Instrument(
             id=instrument_id,
+            name=name,
             airlinkID=airlinkID,
             image=image,
             organization=organization,
@@ -182,6 +185,7 @@ def get_instruments():
             if not Instrument.query.filter_by(id=topic).first():
                 data = {
                     'id': topic,
+                    'name': '',
                     'airlinkID': None,
                     'organization': "",
                     'installation_date': datetime.now().strftime('%Y-%m-%d'),
@@ -207,6 +211,7 @@ def get_instruments():
 
         instrument_data = {
             'id': instrument.id,
+            'name': instrument.name,
             'latitude': instrument.latitude,
             'longitude': instrument.longitude,
             'type': instrument.instrument_type,
@@ -296,6 +301,7 @@ def admin():
     if request.method == 'POST':
         data = {
             'id': request.form.get('id'),
+            'name': request.form.get('name'),
             'airlinkID': request.form.get('airlinkID'),
             'organization': request.form.get('organization'),
             'installation_date': request.form.get('installation_date'),
@@ -321,6 +327,7 @@ def admin():
 def edit_instrument(instrument_id):
     data = {
         'id': request.form.get('id'),
+        'name': request.form.get('name'),
         'airlinkID': request.form.get('airlinkID'),
         'organization': request.form.get('organization'),
         'installation_date': request.form.get('installation_date'),

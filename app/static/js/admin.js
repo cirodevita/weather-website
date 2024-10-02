@@ -81,6 +81,7 @@ function openModal(instrument = null) {
       form.action = `/edit/${instrument.id}`;
 
       document.getElementById("instrument-id").value = instrument.id;
+      document.getElementById("name").value = instrument.name;
       document.getElementById("airlinkID").value = instrument.airlinkID;
       document.getElementById("organization").value = instrument.organization;
       document.getElementById("installation_date").value = instrument.installation_date;
@@ -95,6 +96,7 @@ function openModal(instrument = null) {
       form.action = "/admin";
 
       document.getElementById("instrument-id").value = "";
+      document.getElementById("name").value = "";
       document.getElementById("airlinkID").value = "";
       document.getElementById("organization").value = "";
       document.getElementById("installation_date").value = "";
@@ -113,12 +115,13 @@ editButtons.forEach(button => {
 
       const instrument = {
           id: instrumentId,
-          airlinkID: button.closest('tr').querySelector('td:nth-child(3)').textContent,
-          organization: button.closest('tr').querySelector('td:nth-child(5)').textContent,
-          installation_date: button.closest('tr').querySelector('td:nth-child(6)').textContent,
-          latitude: button.closest('tr').querySelector('td:nth-child(7)').textContent.split(", ")[0],
-          longitude: button.closest('tr').querySelector('td:nth-child(7)').textContent.split(", ")[1],
-          instrument_type: button.closest('tr').querySelector('td:nth-child(8)').textContent.trim()
+          name: button.closest('tr').querySelector('td:nth-child(3)').textContent,
+          airlinkID: button.closest('tr').querySelector('td:nth-child(4)').textContent,
+          organization: button.closest('tr').querySelector('td:nth-child(6)').textContent,
+          installation_date: button.closest('tr').querySelector('td:nth-child(7)').textContent,
+          latitude: button.closest('tr').querySelector('td:nth-child(8)').textContent.split(", ")[0],
+          longitude: button.closest('tr').querySelector('td:nth-child(8)').textContent.split(", ")[1],
+          instrument_type: button.closest('tr').querySelector('td:nth-child(9)').textContent.trim()
       };
       openModal(instrument);
   });

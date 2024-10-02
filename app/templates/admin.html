@@ -33,6 +33,7 @@
                 <tr>
                     <th>Status</th>
                     <th>ID</th>
+                    <th>Name</th>
                     <th>Airlink ID</th>
                     <th>Image</th>
                     <th>Organization</th>
@@ -53,6 +54,7 @@
                         {% endif %}
                     </td>
                     <td>{{ instrument.id }}</td>
+                    <td>{{ instrument.name }}</td>
                     <td>{{ instrument.airlinkID }}</td>
                     <td><img src="{% if instrument.image %}{{ url_for('static', filename='uploads/' ~ instrument.image) }}{% else %}{{ url_for('static', filename='images/noimage.png') }}{% endif %}" alt="Image" width="50"></td>
                     <td>{{ instrument.organization }}</td>
@@ -84,6 +86,9 @@
             <form id="instrument-form" action="/admin" method="POST" enctype="multipart/form-data">
                 <label for="id">Instrument ID (Format: it.uniparthenope.meteo.xxx)</label>
                 <input type="text" id="instrument-id" name="id" required>
+
+                <label for="name">Device Name</label>
+                <input type="text" id="name" name="name">
 
                 <label for="airlinkID">Airlink ID</label>
                 <input type="text" id="airlinkID" name="airlinkID">

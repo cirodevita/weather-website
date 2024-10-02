@@ -25,6 +25,7 @@ class Instrument(db.Model):
     __tablename__ = 'instruments'
 
     id = db.Column(db.String(50), primary_key=True, unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=True)
     image = db.Column(db.String(255), nullable=True)
     organization = db.Column(db.String(100), nullable=True)
     installation_date = db.Column(db.Date, nullable=True)
@@ -35,8 +36,9 @@ class Instrument(db.Model):
     airlinkID = db.Column(db.String(100), nullable=True)
     status = db.Column(db.String, default='offline')
 
-    def __init__(self, id, airlinkID, image, organization, installation_date, latitude, longitude, variables, instrument_type):
+    def __init__(self, id, name, airlinkID, image, organization, installation_date, latitude, longitude, variables, instrument_type):
         self.id = id
+        self.name = name
         self.airlinkID = airlinkID
         self.image = image
         self.organization = organization

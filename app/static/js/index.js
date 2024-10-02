@@ -165,6 +165,7 @@ fetch('/instruments')
                 <div class="popup-content">
                     ${instrument.image ? `<img src="${instrument.image}" class="popup-image" alt="Instrument Image">` : `<img src="static/images/noimage.png" class="popup-image" alt="Instrument Image">`}
                     <div class="popup-details">
+                        <b>${instrument.name}</b><br>
                         <b>ID:</b> <a href="https://api.meteo.uniparthenope.it/grafana/d/edf1iu0nyyv40e/dashboard?orgId=1&refresh=30s&from=now-24h&to=now&var-stations=${instrument.id}&kiosk" target="_blank">${instrument.id}</a><br>
                         <b>Organization:</b> ${instrument.organization}<br>
                         <a href="/timeseries/${instrument.id}" target="_blank">
