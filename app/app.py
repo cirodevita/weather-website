@@ -38,6 +38,38 @@ instrument_types = {
     "ws_on": {
         "name": "Stazione Meteorologica",
         "variables": "TempOut, HumOut, WindSpeed, WindDir, RainRate, Barometer"
+    },
+    "ws_off": {
+        "name": "Stazione Meteorologica - off",
+        "variables": ""
+    },
+    "radar_off": {
+        "name": "Radar Meteorologico",
+        "variables": "Precipitation"
+    },
+    "tidegauge_off": {
+        "name": "Mareografo",
+        "variables": "SeaLevel"
+    },
+    "wavebuoy_off": {
+        "name": "Ondametro",
+        "variables": ""
+    },
+    "mooring_off": {
+        "name": "Mooring",
+        "variables": ""
+    },
+    "owbuoy_off": {
+        "name": "Boa Meteo-Oceanografica",
+        "variables": ""
+    },
+    "hf_off": {
+        "name": "HF Radar",
+        "variables": ""
+    },
+    "glider_off": {
+        "name": "Glider",
+        "variables": "Temp, Salt, Depth, Turbidity, Oxygen, Nitrates"
     }
 }
 

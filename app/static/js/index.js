@@ -28,6 +28,47 @@ let variablesMap = {
         "name": "Temperatura",
         "unit": "°C",
         "icon": "temp_icon.png"
+    },
+
+    "Temp": {
+        "name": "Temperatura",
+        "unit": "°C",
+        "icon": "temp_icon.png"
+    },
+    "Salt": {
+        "name": "Salinità",
+        "unit": "",
+        "icon": ""
+    },
+    "Depth": {
+        "name": "Profondità",
+        "unit": "",
+        "icon": ""
+    },
+    "Turbidity": {
+        "name": "Torbidità",
+        "unit": "",
+        "icon": ""
+    },
+    "Oxygen": {
+        "name": "Ossigeno Disciolto",
+        "unit": "",
+        "icon": ""
+    },
+    "Nitrates": {
+        "name": "Nitrati",
+        "unit": "",
+        "icon": ""
+    },
+    "SeaLevel": {
+        "name": "Livello del Mare",
+        "unit": "",
+        "icon": ""
+    },
+    "Precipitation": {
+        "name": "Tipo di Precipitazione",
+        "unit": "",
+        "icon": ""
     }
 };
 
