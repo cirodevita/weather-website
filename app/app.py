@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from influxdb_client import InfluxDBClient
+import utils
 
 load_dotenv()
 
@@ -164,6 +165,9 @@ def get_instruments():
                         influx_data[record.get_field()] = record.get_value()
 
         instrument_data['variables'] = influx_data
+        if 'TempOut' in instrument_data['variables']:
+            instrument_data['variables']['TempOut'] = utils.convert_f_to_c(instrument_data['variables']['TempOut'])
+        print(instrument_data['variables']['TempOut'])
         instruments_data.append(instrument_data)
 
     return jsonify(instruments_data)

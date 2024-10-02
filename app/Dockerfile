@@ -10,4 +10,5 @@ COPY static/ static/
 COPY templates/ templates/
 COPY models.py models.py
 COPY app.py app.py
+COPY utils.py utils.py
 COPY alert.py alert.py
