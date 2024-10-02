@@ -1,6 +1,6 @@
 let variablesMap = {
     "TempOut": {
-        "name": "Temparatura",
+        "name": "Temperatura",
         "unit": "°C"
     },
     "HumOut": {
