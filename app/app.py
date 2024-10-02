@@ -103,7 +103,16 @@ def create_or_update_instrument(data, is_edit=False):
 def index():
     return render_template('index.html')
 
-
+@app.route('/get_airlink/<string:instrument_id>', methods=['GET'])
+def get_airlink(instrument_id):
+    
+    """Restituisce l'Airlink ID dato l'ID dello strumento."""
+    airlinkID = Instrument.get_airlinkID_by_id(instrument_id)
+    if airlinkID:
+        return jsonify({"airlinkID": airlinkID}), 200
+    else:
+        return jsonify({"error": "Strumento non trovato"}), 404
+    
 @app.route('/instruments', methods=['GET', 'POST'])
 def get_instruments():
     url = os.getenv("INFLUXDB_URL")

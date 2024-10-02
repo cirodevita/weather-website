@@ -45,3 +45,11 @@ class Instrument(db.Model):
         self.longitude = longitude
         self.variables = variables
         self.instrument_type = instrument_type
+
+    @classmethod
+    def get_airlinkID_by_id(cls, id):
+        """Ritorna airlinkID dato l'id dello strumento."""
+        instrument = cls.query.filter_by(id=id).first()
+        if instrument:
+            return instrument.airlinkID
+        return None
