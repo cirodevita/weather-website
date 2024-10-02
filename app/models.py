@@ -48,8 +48,14 @@ class Instrument(db.Model):
 
     @classmethod
     def get_airlinkID_by_id(cls, id):
-        """Ritorna airlinkID dato l'id dello strumento."""
         instrument = cls.query.filter_by(id=id).first()
         if instrument:
             return instrument.airlinkID
+        return None
+
+    @classmethod
+    def get_variables_by_id(cls, id):
+        instrument = cls.query.filter_by(id=id).first()
+        if instrument:
+            return instrument.variables
         return None

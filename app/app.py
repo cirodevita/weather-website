@@ -1,7 +1,7 @@
-import os
+from io import StringIO
 from dotenv import load_dotenv
 from datetime import datetime
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
 from models import db, User, Instrument
@@ -10,6 +10,9 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from influxdb_client import InfluxDBClient
 import utils
+import csv
+import os
+import time
 
 load_dotenv()
 
@@ -37,6 +40,12 @@ instrument_types = {
         "variables": "TempOut, HumOut, WindSpeed, WindDir, RainRate, Barometer"
     }
 }
+
+
+inluxdb_url = os.getenv("INFLUXDB_URL")
+token = os.getenv("INFLUXDB_TOKEN")
+org = os.getenv("INFLUXDB_ORG")
+bucket = os.getenv("INFLUXDB_BUCKET")
 
 
 def allowed_file(filename):
@@ -103,24 +112,31 @@ def create_or_update_instrument(data, is_edit=False):
 def index():
     return render_template('index.html')
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+    return render_template('index.html')
+
+
 @app.route('/get_airlink/<string:instrument_id>', methods=['GET'])
 def get_airlink(instrument_id):
-
-    """Restituisce l'Airlink ID dato l'ID dello strumento."""
     airlinkID = Instrument.get_airlinkID_by_id(instrument_id)
     if airlinkID:
         return jsonify({"airlinkID": airlinkID}), 200
     else:
         return jsonify({"error": "Strumento non trovato"}), 404
-    
+
+
 @app.route('/instruments', methods=['GET', 'POST'])
 def get_instruments():
-    url = os.getenv("INFLUXDB_URL")
-    token = os.getenv("INFLUXDB_TOKEN")
-    org = os.getenv("INFLUXDB_ORG")
-    bucket = os.getenv("INFLUXDB_BUCKET")
-
-    client = InfluxDBClient(url=url, token=token, org=org)
+    client = InfluxDBClient(url=inluxdb_url, token=token, org=org)
     query_api = client.query_api()
 
     if request.method == 'POST':
@@ -176,22 +192,70 @@ def get_instruments():
         instrument_data['variables'] = influx_data
         if 'TempOut' in instrument_data['variables']:
             instrument_data['variables']['TempOut'] = utils.convert_f_to_c(instrument_data['variables']['TempOut'])
-        
+
         instruments_data.append(instrument_data)
 
     return jsonify(instruments_data)
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('index'))
-    return render_template('index.html')
+@app.route('/timeseries/<string:instrument_id>', methods=['GET'])
+@login_required
+def timeseries(instrument_id):
+    client = InfluxDBClient(url=inluxdb_url, token=token, org=org)
+    query_api = client.query_api()
+
+    start_time = request.args.get('start', None)
+    end_time = request.args.get('end', None)
+
+    if not start_time:
+        start_time = int(time.time()) - 10800
+    if not end_time:
+        end_time = int(time.time())
+
+    start_time_iso = datetime.utcfromtimestamp(int(start_time)).isoformat() + "Z"
+    end_time_iso = datetime.utcfromtimestamp(int(end_time)).isoformat() + "Z"
+
+    query = f"""
+    from(bucket: "{bucket}")
+    |> range(start: {start_time_iso}, stop: {end_time_iso})
+    |> filter(fn: (r) => r["topic"] == "{instrument_id}")
+    """
+    tables = query_api.query(query, org=org)
+
+    influx_data = {}
+    for table in tables:
+        for record in table.records:
+            field = record.get_field()
+            if field not in influx_data:
+                influx_data[field] = []
+
+            influx_data[field].append({
+                "time": record.get_time().isoformat(),
+                "value": record.get_value()
+            })
+
+    csv_output = StringIO()
+    writer = csv.writer(csv_output)
+
+    all_variables = list(influx_data.keys())
+    headers = ["time"] + all_variables
+    writer.writerow(headers)
+
+    time_indexed_data = {}
+
+    for variable, records in influx_data.items():
+        for record in records:
+            time_value = record["time"]
+            if time_value not in time_indexed_data:
+                time_indexed_data[time_value] = {var: "" for var in all_variables}
+            time_indexed_data[time_value][variable] = record["value"]
+
+    for time_value, values in sorted(time_indexed_data.items()):
+        row = [time_value] + [values[var] for var in all_variables]
+        writer.writerow(row)
+
+    csv_output.seek(0)
+    return Response(csv_output, mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename={instrument_id}_timeseries.csv"})
 
 
 @app.route('/admin', methods=['GET', 'POST'])

@@ -1,5 +1,4 @@
 let variablesMap = {
-    
     "HumOut": {
         "name": "Umidità",
         "unit": "%",
@@ -127,7 +126,9 @@ fetch('/instruments')
                     <div class="popup-details">
                         <b>ID:</b> <a href="https://api.meteo.uniparthenope.it/grafana/d/edf1iu0nyyv40e/dashboard?orgId=1&refresh=30s&from=now-24h&to=now&var-stations=${instrument.id}&kiosk" target="_blank">${instrument.id}</a><br>
                         <b>Organization:</b> ${instrument.organization}<br>
-                        <img style="width: 20px"; src="static/icons/csv_icon.png">
+                        <a href="/timeseries/${instrument.id}" target="_blank">
+                            <img style="width: 20px; cursor: pointer;" src="static/icons/csv_icon.png" alt="Download CSV">
+                        </a>
                         ${variablesArray.length > 0 ? `<br>${variablesTable}` : ''}
                     </div>
                 </div>
