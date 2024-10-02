@@ -249,3 +249,19 @@ button:hover, .admin-button:hover, .logout-button:hover, .login-button:hover {
 .popup-details b {
     color: #333;
 }
+
+.table-cell {
+    
+    text-align: center;
+    background-color: rgba(255,255,255,0.6);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-blend-mode: lighten;
+}
+.large-text {
+    font-size: 24px;
+}
+.small-text {
+    font-size: 14px;
+}

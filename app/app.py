@@ -105,7 +105,7 @@ def index():
 
 @app.route('/get_airlink/<string:instrument_id>', methods=['GET'])
 def get_airlink(instrument_id):
-    
+
     """Restituisce l'Airlink ID dato l'ID dello strumento."""
     airlinkID = Instrument.get_airlinkID_by_id(instrument_id)
     if airlinkID:
@@ -176,7 +176,7 @@ def get_instruments():
         instrument_data['variables'] = influx_data
         if 'TempOut' in instrument_data['variables']:
             instrument_data['variables']['TempOut'] = utils.convert_f_to_c(instrument_data['variables']['TempOut'])
-        print(instrument_data['variables']['TempOut'])
+        
         instruments_data.append(instrument_data)
 
     return jsonify(instruments_data)

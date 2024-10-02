@@ -1,29 +1,37 @@
 let variablesMap = {
-    "TempOut": {
-        "name": "Temperatura",
-        "unit": "°C"
-    },
+    
     "HumOut": {
         "name": "Umidità",
-        "unit": "%"
+        "unit": "%",
+        "icon": "humidity_icon.png"
     },
     "WindSpeed": {
         "name": "Velocità Vento",
-        "unit": "km/h"
+        "unit": "km/h",
+        "icon": "wind_speed_icon.png"
     },
     "WindDir": {
         "name": "Direzione Vento",
-        "unit": "°N"
+        "unit": "°N",
+        "icon": "wind_dir_icon.png"
     },
     "RainRate": {
         "name": "Rain Rate",
-        "unit": "mm/h"
+        "unit": "mm/h",
+        "icon": "rain_icon.png"
     },
     "Barometer": {
         "name": "Pressione",
-        "unit": "hPa"
+        "unit": "hPa",
+        "icon": "press_icon.png"
     },
-}
+    "TempOut": {
+        "name": "Temperatura",
+        "unit": "°C",
+        "icon": "temp_icon.png"
+    }
+};
+
 
 const loginBtn = document.getElementById("login-btn");
 const loginModal = document.getElementById("login-modal");
@@ -89,15 +97,38 @@ fetch('/instruments')
                 })
             }).addTo(map);
 
-            let variables = Object.entries(instrument.variables).map(([key, value]) => `<b>${variablesMap[key]["name"]}:</b> ${value} ${variablesMap[key]["unit"]}`).join('<br>');
-            
+            let variablesArray = Object.entries(instrument.variables).map(([key, value]) => {
+                let [integerPart, decimalPart] = value.toString().split(".");
+
+                let backgroundIcon = `static/icons/weather/${variablesMap[key]["icon"]}`;
+
+                return `
+                        <td class="table-cell" style="background-image: url('${backgroundIcon}');">
+                            <div class="large-text">
+                                ${integerPart}${decimalPart ? `<span class="small-text">.${decimalPart}</span>` : ''}
+                            </div> 
+                            <div class="small-text">${variablesMap[key]["unit"]}</div>
+                        </td>`;
+            });
+
+            let variablesTable = '<table style="border-collapse: collapse; width: 100%;">';
+            for (let i = 0; i < variablesArray.length; i += 3) {
+                variablesTable += '<tr>';
+                for (let j = i; j < i + 3 && j < variablesArray.length; j++) {
+                    variablesTable += variablesArray[j];
+                }
+                variablesTable += '</tr>';
+            }
+            variablesTable += '</table>';
+
             let popupContent = `
                 <div class="popup-content">
                     ${instrument.image ? `<img src="${instrument.image}" class="popup-image" alt="Instrument Image">` : `<img src="static/images/noimage.png" class="popup-image" alt="Instrument Image">`}
                     <div class="popup-details">
                         <b>ID:</b> <a href="https://api.meteo.uniparthenope.it/grafana/d/edf1iu0nyyv40e/dashboard?orgId=1&refresh=30s&from=now-24h&to=now&var-stations=${instrument.id}&kiosk" target="_blank">${instrument.id}</a><br>
                         <b>Organization:</b> ${instrument.organization}<br>
-                        ${variables ? `<br>${variables}` : ''}
+                        <img style="width: 20px"; src="static/icons/csv_icon.png">
+                        ${variablesArray.length > 0 ? `<br>${variablesTable}` : ''}
                     </div>
                 </div>
             `;
