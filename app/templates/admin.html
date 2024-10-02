@@ -54,7 +54,7 @@
                     </td>
                     <td>{{ instrument.id }}</td>
                     <td>{{ instrument.airlinkID }}</td>
-                    <td><img src="{{ url_for('static', filename='uploads/' ~ instrument.image) }}" alt="Image" width="50"></td>
+                    <td><img src="{% if instrument.image %}{{ url_for('static', filename='uploads/' ~ instrument.image) }}{% else %}{{ url_for('static', filename='images/noimage.png') }}{% endif %}" alt="Image" width="50"></td>
                     <td>{{ instrument.organization }}</td>
                     <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>

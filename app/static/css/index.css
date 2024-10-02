@@ -90,7 +90,7 @@ button, .admin-button, .logout-button, .login-button {
     background-color: #1E90FF;
     color: white;
     border: none;
-    border-radius: 25px;
+    border-radius: 4px;
     font-size: 14px;
     font-family: 'Roboto', sans-serif;
     cursor: pointer;

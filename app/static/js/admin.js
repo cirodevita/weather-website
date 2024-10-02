@@ -54,11 +54,26 @@ document.getElementById("add-instrument-btn").onclick = function() {
   openModal();
 };
 
+function getInstrumentTypesFromSelect() {
+  const instrumentTypes = {};
+  const selectElement = document.getElementById("instrument_type");
+  
+  Array.from(selectElement.options).forEach(option => {
+    if (option.value) {
+      instrumentTypes[option.value] = option.text.trim();
+    }
+  });
+  
+  return instrumentTypes;
+}
+
 function openModal(instrument = null) {
   const modal = document.getElementById("instrument-modal");
   const title = document.getElementById("modal-title");
   const submitButton = document.getElementById("modal-submit-btn");
   const form = document.getElementById("instrument-form");
+
+  const instrumentTypes = getInstrumentTypesFromSelect();
 
   if (instrument) {
       title.textContent = "Edit Instrument";
@@ -71,7 +86,9 @@ function openModal(instrument = null) {
       document.getElementById("installation_date").value = instrument.installation_date;
       document.getElementById("latitude").value = instrument.latitude;
       document.getElementById("longitude").value = instrument.longitude;
-      document.getElementById("instrument_type").value = instrument.instrument_type;
+      
+      const instrumentTypeValue = Object.keys(instrumentTypes).find(key => instrumentTypes[key] === instrument.instrument_type.trim());
+      document.getElementById("instrument_type").value = instrumentTypeValue || "";
   } else {
       title.textContent = "Add New Instrument";
       submitButton.textContent = "Add Instrument";
@@ -96,13 +113,12 @@ editButtons.forEach(button => {
 
       const instrument = {
           id: instrumentId,
-          airlinkID: button.closest('tr').querySelector('td:nth-child(2)').textContent,
-          organization: button.closest('tr').querySelector('td:nth-child(4)').textContent,
-          installation_date: button.closest('tr').querySelector('td:nth-child(5)').textContent,
-          latitude: button.closest('tr').querySelector('td:nth-child(6)').textContent.split(", ")[0],
-          longitude: button.closest('tr').querySelector('td:nth-child(6)').textContent.split(", ")[1],
-          variables: button.closest('tr').querySelector('td:nth-child(7)').textContent,
-          instrument_type: button.closest('tr').querySelector('td:nth-child(8)').textContent
+          airlinkID: button.closest('tr').querySelector('td:nth-child(3)').textContent,
+          organization: button.closest('tr').querySelector('td:nth-child(5)').textContent,
+          installation_date: button.closest('tr').querySelector('td:nth-child(6)').textContent,
+          latitude: button.closest('tr').querySelector('td:nth-child(7)').textContent.split(", ")[0],
+          longitude: button.closest('tr').querySelector('td:nth-child(7)').textContent.split(", ")[1],
+          instrument_type: button.closest('tr').querySelector('td:nth-child(8)').textContent.trim()
       };
       openModal(instrument);
   });
