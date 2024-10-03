@@ -265,3 +265,27 @@ button:hover, .admin-button:hover, .logout-button:hover, .login-button:hover {
 .small-text {
     font-size: 14px;
 }
+
+.arrow-btn {
+    margin-top: 5px;
+    height: 15px;
+    background-color: #07598D; 
+    color: white;
+    border: none;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.arrow-btn:hover {
+    background-color: #043b61; 
+}
+
+.arrow-btn:disabled {
+    background-color: #cccccc; 
+    cursor: not-allowed;
+}

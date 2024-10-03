@@ -73,6 +73,7 @@ instrument_types = {
     }
 }
 
+airlink_variables = "pm_2p5_nowcast, pm_1, pm_10_nowcast, aqi_nowcast_val"
 
 inluxdb_url = os.getenv("INFLUXDB_URL")
 token = os.getenv("INFLUXDB_TOKEN")
@@ -108,7 +109,8 @@ def create_or_update_instrument(data, is_edit=False):
     instrument_type = data.get('instrument_type')
 
     variables = instrument_types.get(instrument_type, {}).get("variables", "")
-
+    if airlinkID != "":
+        variables += airlink_variables
     image = handle_file_upload(data.get('image'))
 
     if is_edit:
@@ -212,6 +214,7 @@ def get_instruments():
         instrument_data = {
             'id': instrument.id,
             'name': instrument.name,
+            'airlinkID': instrument.airlinkID,
             'latitude': instrument.latitude,
             'longitude': instrument.longitude,
             'type': instrument.instrument_type,

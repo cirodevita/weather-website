@@ -65,13 +65,27 @@ let variablesMap = {
         "unit": "",
         "icon": ""
     },
-    "Precipitation": {
+    "pm_2p5_nowcast": {
         "name": "Tipo di Precipitazione",
-        "unit": "",
+        "unit": "PM2.5",
+        "icon": ""
+    },
+    "pm_1": {
+        "name": "Tipo di Precipitazione",
+        "unit": "PM1",
+        "icon": ""
+    },
+    "pm_10_nowcast": {
+        "name": "Tipo di Precipitazione",
+        "unit": "PM10",
+        "icon": ""
+    },
+    "aqi_nowcast_val": {
+        "name": "Tipo di Precipitazione",
+        "unit": "AQI",
         "icon": ""
     }
 };
-
 
 const loginBtn = document.getElementById("login-btn");
 const loginModal = document.getElementById("login-modal");
@@ -102,6 +116,8 @@ legend.onAdd = function (map) {
     return div;
 };
 
+
+
 legend.addTo(map);
 
 if (loginBtn) {
@@ -123,6 +139,99 @@ window.onclick = function(event) {
     }
 };
 
+let currentPage = 0;
+
+function getItemsPerPage(page) {
+    if (page === 1) {
+        return 4;
+    }
+    return 6;
+}
+
+function getPageName(page) {
+    switch (page) {
+        case 0:
+            return "Weather Station";
+        case 1:
+            return "Air Quality";
+        default:
+            return `Page ${page + 1}`;
+    }
+}
+
+function createTable(variablesArray) {
+    let variablesTable = '<table style="border-collapse: collapse; width: 100%;">';
+    for (let i = 0; i < variablesArray.length; i += 3) {
+        variablesTable += '<tr>';
+        for (let j = i; j < i + 3 && j < variablesArray.length; j++) {
+            variablesTable += variablesArray[j];
+        }
+        variablesTable += '</tr>';
+    }
+    variablesTable += '</table>';
+    return variablesTable;
+}
+
+airlink_variables = ["pm_2p5_nowcast","pm_1","pm_10_nowcast" ,"aqi_nowcast_val"];
+
+function updateTable(data, instrument, startIndex, itemsPerPage, currentPage) {
+
+    let variablesArray = Object.entries(instrument.variables).slice(startIndex, startIndex + itemsPerPage).map(([key, value]) => {
+        // If values are from AirLink, then cast to integer.
+        if (airlink_variables.indexOf(key) > -1)
+            val = Math.round(value);
+        else
+            val = value;
+
+        let [integerPart, decimalPart] = val.toString().split(".");
+        let backgroundIcon = `static/icons/weather/${variablesMap[key]["icon"]}`;
+        return `
+            <td class="table-cell" style="background-image: url('${backgroundIcon}');">
+                <div style="font-size: 24px;">
+                    ${integerPart}${decimalPart ? `<span style="font-size: 14px;">.${decimalPart}</span>` : ''}
+                </div> 
+                <div style="font-size: 14px;">${variablesMap[key]["unit"]}</div>
+            </td>`;
+    });
+
+    let variablesTable = createTable(variablesArray);
+
+    // Mostra le frecce solo se airlinkID ha un valore
+    let paginationControls = '';
+    if (instrument.airlinkID) {
+        paginationControls = `
+            <div style="text-align: center; margin-top: 10px;">
+                <button id="prevPage" class="arrow-btn">◀</button> 
+                <span>${getPageName(currentPage)}</span> 
+                <button id="nextPage" class="arrow-btn">▶</button>
+            </div>
+        `;
+    }
+
+    let popupContent = `
+        <div class="popup-content">
+            ${instrument.image ? `<img src="${instrument.image}" class="popup-image" alt="Instrument Image">` : `<img src="static/images/noimage.png" class="popup-image" alt="Instrument Image">`}
+            <div class="popup-details">
+                <b>ID:</b> <a href="https://api.meteo.uniparthenope.it/grafana/d/edf1iu0nyyv40e/dashboard?orgId=1&refresh=30s&from=now-24h&to=now&var-stations=${instrument.id}&kiosk" target="_blank">${instrument.id}</a><br>
+                <b>Organization:</b> ${instrument.organization}<br>
+                ${variablesArray.length > 0 ? `<br>${variablesTable}` : ''}
+            </div>
+        </div>
+         ${paginationControls}
+    `;
+
+    return popupContent;
+}
+
+function updatePopupContent(marker, popupContent) {
+    const popup = marker.getPopup();
+    popup.options.closeOnClick = false;
+    if (popup && marker.isPopupOpen()) {
+        popup.setContent(popupContent); // Aggiorna solo il contenuto del popup
+        popup.update(); // Aggiorna la visualizzazione del popup
+    }
+}
+
 fetch('/instruments')
     .then(response => response.json())
     .then(data => {
@@ -137,46 +246,38 @@ fetch('/instruments')
                 })
             }).addTo(map);
 
-            let variablesArray = Object.entries(instrument.variables).map(([key, value]) => {
-                let [integerPart, decimalPart] = value.toString().split(".");
+            let popupContent = updateTable(data, instrument, 0, getItemsPerPage(currentPage), currentPage);
+            marker.bindPopup(popupContent);
+            const pp = marker.getPopup();
+            pp.options.closeOnClick = false;
 
-                let backgroundIcon = `static/icons/weather/${variablesMap[key]["icon"]}`;
+            let updatePopup = (currentPage) => {
+                let itemsPerPage = getItemsPerPage(currentPage); // Ottieni il numero di elementi per pagina
+                let startIndex = currentPage * itemsPerPage;
+                let popupContent = updateTable(data, instrument, startIndex, itemsPerPage, currentPage);
+                updatePopupContent(marker, popupContent);
+                
+                if (instrument.airlinkID) {                    
+                    document.getElementById("prevPage").onclick = function() {
+                        if (currentPage > 0) {
+                            currentPage--;
+                            updatePopup(currentPage);
+                        }
+                    };
+                    document.getElementById("nextPage").onclick = function() {
+                        if ((currentPage + 1) * itemsPerPage < Object.entries(instrument.variables).length) {
+                            currentPage++;
+                            updatePopup(currentPage);
+                        }
+                    };
+                }
+            };
 
-                return `
-                        <td class="table-cell" style="background-image: url('${backgroundIcon}');">
-                            <div class="large-text">
-                                ${integerPart}${decimalPart ? `<span class="small-text">.${decimalPart}</span>` : ''}
-                            </div> 
-                            <div class="small-text">${variablesMap[key]["unit"]}</div>
-                        </td>`;
+            marker.on('popupopen', function () {
+                marker.options.closeOnClick = false;
+                updatePopup(currentPage);
             });
 
-            let variablesTable = '<table style="border-collapse: collapse; width: 100%;">';
-            for (let i = 0; i < variablesArray.length; i += 3) {
-                variablesTable += '<tr>';
-                for (let j = i; j < i + 3 && j < variablesArray.length; j++) {
-                    variablesTable += variablesArray[j];
-                }
-                variablesTable += '</tr>';
-            }
-            variablesTable += '</table>';
-
-            let popupContent = `
-                <div class="popup-content">
-                    ${instrument.image ? `<img src="${instrument.image}" class="popup-image" alt="Instrument Image">` : `<img src="static/images/noimage.png" class="popup-image" alt="Instrument Image">`}
-                    <div class="popup-details">
-                        <b>${instrument.name}</b><br>
-                        <b>ID:</b> <a href="https://api.meteo.uniparthenope.it/grafana/d/edf1iu0nyyv40e/dashboard?orgId=1&refresh=30s&from=now-24h&to=now&var-stations=${instrument.id}&kiosk" target="_blank">${instrument.id}</a><br>
-                        <b>Organization:</b> ${instrument.organization}<br>
-                        <a href="/timeseries/${instrument.id}" target="_blank">
-                            <img style="width: 20px; cursor: pointer;" src="static/icons/csv_icon.png" alt="Download CSV">
-                        </a>
-                        ${variablesArray.length > 0 ? `<br>${variablesTable}` : ''}
-                    </div>
-                </div>
-            `;
-
-            marker.bindPopup(popupContent);
         });
     })
     .catch(error => console.error('Error fetching instruments:', error));
