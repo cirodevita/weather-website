@@ -4,9 +4,9 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from influxdb_client import InfluxDBClient
-# import smtplib
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
@@ -18,12 +18,14 @@ bucket = os.getenv("INFLUXDB_BUCKET")
 db_url = os.getenv('DATABASE_URL')
 
 # SMTP Configuration
-#SMTP_SERVER = os.getenv("SMTP_SERVER")
-#SMTP_PORT = os.getenv("SMTP_PORT")
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = os.getenv("SMTP_PORT")
 #SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 #SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-#EMAIL_FROM = os.getenv("EMAIL_FROM")
-#EMAIL_TO = os.getenv("EMAIL_TO")
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_TO = os.getenv("EMAIL_TO")
+if EMAIL_TO:
+    EMAIL_TO = EMAIL_TO.split(",")
 
 # Postgres engine
 engine = create_engine(db_url)
@@ -68,31 +70,31 @@ def check_station_status():
 
 
 def send_alert(station_id, status):
-    # subject = f"ALERT: Station {station_id} is now {status.upper()}"
-    # body = f"The station with ID {station_id} has changed status to {status.upper()}."
+    subject = f"ALERT: Station {station_id} is now {status.upper()}"
+    body = f"The station with ID {station_id} has changed status to {status.upper()}."
 
-    # send_email(subject, body)
+    send_email(subject, body)
 
     print(f"ALERT: Station {station_id} is now {status}")
 
 
-#def send_email(subject, body):
-    #msg = MIMEMultipart()
-    #msg['From'] = EMAIL_FROM
-    #msg['To'] = EMAIL_TO
-    #msg['Subject'] = subject
+def send_email(subject, body):
+    msg = MIMEMultipart()
+    msg['From'] = EMAIL_FROM
+    msg['To'] = ", ".join(EMAIL_TO) if isinstance(EMAIL_TO, list) else EMAIL_TO
+    msg['Subject'] = subject
 
-    #msg.attach(MIMEText(body, 'plain'))
+    msg.attach(MIMEText(body, 'plain'))
 
-    #try:
-        #with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            #server.starttls()
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
             #server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            #server.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
+            server.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
 
-        #print(f"Email sent to {EMAIL_TO} with subject: {subject}")
-    #except Exception as e:
-        #print(f"Failed to send email: {e}")
+        print(f"Email sent to {EMAIL_TO} with subject: {subject}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
 
 
 while True:
