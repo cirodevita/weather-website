@@ -37,12 +37,16 @@ query_api = client.query_api()
 
 def check_station_status():
     with engine.connect() as connection:
-        result = connection.execute(text("SELECT id, status FROM instruments"))
-        ids_status = {row[0]: row[1] for row in result}
+        results = connection.execute(text("SELECT id, name, status FROM instruments"))
+        instruments = [{"id": row[0], "name": row[1], "status": row[2]} for row in results]
 
         current_time = datetime.utcnow()
 
-        for id, prev_status in ids_status.items():
+        for instrument in instruments:
+            id = instrument["id"]
+            name = instrument["name"]
+            prev_status = instrument["status"]
+            
             query = f"""from(bucket: "{bucket}") 
                         |> range(start: -30m) 
                         |> filter(fn: (r) => r._field == "TempOut" and r.topic == "{id}") 
@@ -62,20 +66,20 @@ def check_station_status():
                 current_status = "offline"
 
             if current_status != prev_status:
-                send_alert(id, current_status)
+                send_alert(id, current_status, name)
                 update_query = text("UPDATE instruments SET status = :status WHERE id = :id")
                 connection.execute(update_query, {"status": current_status, "id": id})
 
         connection.commit()
 
 
-def send_alert(station_id, status):
-    subject = f"ALERT: Station {station_id} is now {status.upper()}"
-    body = f"The station with ID {station_id} has changed status to {status.upper()}."
+def send_alert(station_id, status, station_name):
+    subject = f"ALERT: Station {station_name} ({station_id}) is now {status.upper()}"
+    body = f"The station '{station_name}' (ID {station_id}) has changed status to {status.upper()}."
 
     send_email(subject, body)
 
-    print(f"ALERT: Station {station_id} is now {status}")
+    print(f"ALERT: Station {station_name} ({station_id}) is now {status}")
 
 
 def send_email(subject, body):
