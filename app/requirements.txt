@@ -5,6 +5,7 @@ flask_bcrypt
 Flask-Migrate
 influxdb_client
 requests
+pandas
 psycopg2
 psycopg2-binary
 python-dotenv

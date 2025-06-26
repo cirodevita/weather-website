@@ -1,6 +1,6 @@
 from io import StringIO
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import timedelta, datetime
 from flask import Flask, render_template, redirect, url_for, request, jsonify, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
@@ -13,6 +13,7 @@ import utils
 import csv
 import os
 import time
+import pandas as pd
 
 load_dotenv()
 
@@ -356,6 +357,65 @@ def delete_instrument(instrument_id):
         db.session.delete(instrument)
         db.session.commit()
     return redirect(url_for('admin'))
+
+
+@app.route("/upload_influx", methods=["POST"])
+@login_required
+def upload_influx():
+    file = request.files.get("file")
+    topic_value = request.form.get("topic") or request.args.get("topic")
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+    if not topic_value:
+        return jsonify({"error": "Missing 'topic' parameter."}), 400
+    
+    df = pd.read_csv(file)
+    if "Datetime" not in df.columns:
+        return jsonify({"error": "Missing 'Datetime' column in the uploaded file."}), 400
+    
+    influx_client = InfluxDBClient(url=inluxdb_url, token=token, org=org)
+    write_api = influx_client.write_api()
+    query_api = influx_client.query_api()
+
+    inserted_count = 0
+    for _, row in df.iterrows():
+        datetime_value = row["Datetime"]
+        t0 = datetime.fromisoformat(datetime_value.replace("Z", "+00:00"))
+        start_range = (t0 - timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+        end_range = (t0 + timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
+
+        query = f'''
+        from(bucket: "{bucket}") 
+        |> range(start: {start_range}, stop: {end_range})
+        |> filter(fn: (r) => r._measurement == "mqtt_data") 
+        |> filter(fn: (r) => r["topic"] == "{topic_value}")
+        '''
+        tables = query_api.query(query, org=org)
+
+        exists = any(
+            record.get_field() == "Datetime" and record.get_value() == datetime_value
+            for table in tables
+            for record in table.records
+        )
+
+        if exists:
+            continue
+        
+        fields = {
+            key: value
+            for key, value in row.items()
+            if isinstance(value, (int, float, str))
+        }
+        point = {
+                "measurement": "mqtt_data",
+                "tags": {"topic": topic_value},
+                "fields": fields,
+                "time": datetime_value
+        }
+        write_api.write(bucket=bucket, org=org, record=point)
+        inserted_count += 1
+    
+    return jsonify({"inserted_count": inserted_count}), 200
 
 
 @app.route('/logout')
