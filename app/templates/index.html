@@ -35,7 +35,7 @@
             <div class="user-section">
                 {% if current_user.is_authenticated %}
                     <span>Welcome, {{ current_user.username }}!</span>
-                    <a href="{{ url_for('admin') }}" class="admin-button">Dashboard</a>
+                    <a href="{{ url_for('dashboard') }}" class="admin-button">Dashboard</a>
                     <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
                 {% else %}
                     <button id="login-btn" class="login-button">Login</button>

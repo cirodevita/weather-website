@@ -1,7 +1,14 @@
+
+'''
+TODO: 
+- Use CSRF Protection for POST/PUT/DELETE
+- Reimplement instrument delete/edit APIs
+'''
+
 from io import StringIO
 from dotenv import load_dotenv
 from datetime import timedelta, datetime
-from flask import Flask, render_template, redirect, url_for, request, jsonify, Response
+from flask import Flask, render_template, redirect, url_for, request, jsonify, Response, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
 from models import db, User, Instrument
@@ -299,32 +306,124 @@ def timeseries(instrument_id):
     return Response(csv_output, mimetype="text/csv", headers={"Content-Disposition": f"attachment;filename={instrument_id}_timeseries.csv"})
 
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/dashboard', methods=['GET'])
 @login_required
-def admin():
-    if request.method == 'POST':
-        data = {
-            'id': request.form.get('id'),
-            'name': request.form.get('name'),
-            'airlinkID': request.form.get('airlinkID'),
-            'organization': request.form.get('organization'),
-            'installation_date': request.form.get('installation_date'),
-            'latitude': request.form.get('latitude'),
-            'longitude': request.form.get('longitude'),
-            'instrument_type': request.form.get('instrument_type'),
-            'image': request.files.get('image')
-        }
-
-        if create_or_update_instrument(data):
-            db.session.commit()
-        else:
-            db.session.rollback()
-
-        return redirect(url_for('admin'))
-
+def dashboard():
     instruments = Instrument.query.all()
-    return render_template('admin.html', instruments=instruments, instrument_types=instrument_types)
+    return render_template('dashboard.html', instruments=instruments, instrument_types=instrument_types)
 
+
+@app.route('/api/instruments', methods=['POST'])
+@login_required
+def api_create_instrument():
+    # Supporta sia JSON che form-data
+    is_json = request.is_json
+    src = request.get_json(silent=True) if is_json else request.form
+
+    # Estrai campi con default coerenti al tuo schema
+    data = {
+        'id': (src.get('id') if src else None),
+        'name': (src.get('name') if src else None) or '',
+        'airlinkID': (src.get('airlinkID') if src else None),
+        'organization': (src.get('organization') if src else None) or '',
+        'installation_date': (src.get('installation_date') if src else None) or datetime.utcnow().strftime('%Y-%m-%d'),
+        'latitude': (src.get('latitude') if src else None) or 0.0,
+        'longitude': (src.get('longitude') if src else None) or 0.0,
+        'instrument_type': (src.get('instrument_type') if src else None) or '',
+        'image': (request.files.get('image') if not is_json else None)
+    }
+
+    # Validazione minima
+    missing = [k for k in ('id', 'instrument_type') if not data.get(k)]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
+
+    # Parsing sicuro dei tipi
+    try:
+        # installation_date è 'YYYY-MM-DD' nella tua create_or_update_instrument
+        datetime.strptime(data['installation_date'], '%Y-%m-%d')
+        data['latitude'] = float(data['latitude'])
+        data['longitude'] = float(data['longitude'])
+    except ValueError:
+        return jsonify({"error": "Invalid date or coordinates format."}), 400
+
+    try:
+        inst = create_or_update_instrument(data, is_edit=False)
+        if not inst:
+            # create_or_update_instrument ritorna None se fallisce su lookup in edit,
+            # qui non dovrebbe capitare, ma gestiamo comunque
+            db.session.rollback()
+            return jsonify({"error": "Could not create instrument."}), 400
+
+        db.session.commit()
+
+        # Risposta JSON coerente con quello che già usi altrove
+        return jsonify({
+            "id": inst.id,
+            "name": inst.name,
+            "airlinkID": inst.airlinkID,
+            "latitude": inst.latitude,
+            "longitude": inst.longitude,
+            "instrument_type": inst.instrument_type,
+            "organization": inst.organization,
+            "image": f'static/uploads/{inst.image}' if inst.image else None,
+            "variables": inst.variables
+        }), 201
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Instrument with this id (or unique field) already exists."}), 409
+    except Exception as e:
+        db.session.rollback()
+        # Non leakare dettagli in prod, ma utile in dev:
+        return jsonify({"error": "Unexpected error creating instrument."}), 500
+
+
+@app.route('/api/instruments/<string:instrument_id>', methods=['PATCH', 'PUT', 'DELETE'])
+@login_required
+def api_instrument_detail(instrument_id):
+    inst = Instrument.query.get(instrument_id)
+    if not inst:
+        return jsonify({"error": "Instrument not found"}), 404
+
+    if request.method in ('PATCH', 'PUT'):
+        is_json = request.is_json
+        src = request.get_json(silent=True) if is_json else request.form
+
+        # Costruisci solo i campi presenti (qui non usiamo create_or_update_instrument per non forzare tutti i campi)
+        if 'name' in src: inst.name = src['name']
+        if 'airlinkID' in src: inst.airlinkID = src['airlinkID'] or None
+        if 'organization' in src: inst.organization = src['organization'] or ''
+        if 'installation_date' in src:
+            try:
+                inst.installation_date = datetime.strptime(src['installation_date'], '%Y-%m-%d')
+            except ValueError:
+                return jsonify({"error": "Invalid installation_date"}), 400
+        if 'latitude' in src:
+            try: inst.latitude = float(src['latitude'])
+            except ValueError: return jsonify({"error": "Invalid latitude"}), 400
+        if 'longitude' in src:
+            try: inst.longitude = float(src['longitude'])
+            except ValueError: return jsonify({"error": "Invalid longitude"}), 400
+        if 'instrument_type' in src: inst.instrument_type = src['instrument_type'] or ''
+        # Immagine via multipart
+        if not is_json and 'image' in request.files and request.files['image']:
+            file = request.files['image']
+            filename = handle_file_upload(file)
+            if filename:
+                inst.image = filename
+
+        try:
+            db.session.commit()
+            return jsonify({"message": "Updated", "id": inst.id}), 200
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify({"error": "Unique constraint violation"}), 409
+
+    if request.method == 'DELETE':
+        db.session.delete(inst)
+        db.session.commit()
+        return jsonify({"message": "Deleted"}), 200
 
 @app.route('/edit/<instrument_id>', methods=['POST'])
 @login_required
@@ -346,7 +445,7 @@ def edit_instrument(instrument_id):
     else:
         db.session.rollback()
 
-    return redirect(url_for('admin'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/delete/<instrument_id>', methods=['POST', 'GET'])
@@ -356,7 +455,7 @@ def delete_instrument(instrument_id):
     if instrument:
         db.session.delete(instrument)
         db.session.commit()
-    return redirect(url_for('admin'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route("/upload_influx", methods=["POST"])

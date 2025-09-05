@@ -10,6 +10,9 @@ from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 
+# General variables
+MINUTES_TIMEOUT = os.getenv("TIMEOUT", 10)
+
 # Load environment variables
 url = os.getenv("INFLUXDB_URL")
 token = os.getenv("INFLUXDB_TOKEN")
@@ -61,7 +64,7 @@ def check_station_status():
             if last_message_time:
                 last_message_time = last_message_time.replace(tzinfo=None)
                 time_difference = current_time - last_message_time
-                current_status = "offline" if time_difference > timedelta(minutes=10) else "online"
+                current_status = "offline" if time_difference > timedelta(minutes=int(MINUTES_TIMEOUT)) else "online"
             else:
                 current_status = "offline"
 
