@@ -18,14 +18,15 @@
             <div class="modal-content">
                 <span class="close">&times;</span>
                 <h2>Welcome Back</h2>
-                <form id="login-form" action="/login" method="POST">
+                <form id="login-form" method="POST" action="/login">
                     <div class="input-container">
                         <input type="text" id="username" name="username" placeholder="Username" required>
                     </div>
                     <div class="input-container">
                         <input type="password" id="password" name="password" placeholder="Password" required>
                     </div>
-                    <button type="submit" class="modal-submit-btn">Sign In</button>
+                    <div id="login-error" style="color:#b00020; margin-top:.5rem; display:none;"></div>
+                    <button type="submit">Login</button>
                 </form>
             </div>
         </div>

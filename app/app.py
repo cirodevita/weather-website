@@ -226,14 +226,32 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # NOTE: consider CSRF protection and rate limiting for brute-force defense
-        username = request.form['username']
-        password = request.form['password']
+        # Riconosci chiamate AJAX
+        is_ajax = request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        # Prende credenziali da JSON o form-data
+        data = request.get_json(silent=True) or request.form
+        username = (data.get('username') or '').strip()
+        password = (data.get('password') or '').strip()
+
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for('index'))
+            if is_ajax:
+                return jsonify({"success": True, "redirect": url_for('dashboard')}), 200
+            # fallback non-AJAX
+            return redirect(url_for('dashboard'))
+
+        # credenziali errate
+        if is_ajax:
+            return jsonify({"success": False, "error": "Credenziali non valide."}), 401
+
+        # fallback non-AJAX: torni all'index con flag per tenere aperta la modal (se vuoi mantenerlo)
+        return render_template('index.html', login_error="Credenziali non valide.", login_modal_open=True), 401
+
+    # GET
     return render_template('index.html')
+
 
 
 # Users page: admin sees full management; non-admin sees self-service password change

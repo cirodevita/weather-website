@@ -139,6 +139,73 @@ window.onclick = function(event) {
     }
 };
 
+(function(){
+  const form   = document.getElementById('login-form');
+  const errBox = document.getElementById('login-error');
+  const modal  = document.getElementById('login-modal');
+
+  // If the page has no login form, don't bind anything.
+  if (!form) return;
+
+  function getCsrf(){
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : null;
+  }
+
+  function openLoginModal(){
+    if (modal) modal.style.display = 'block';
+  }
+
+  function showError(msg){
+    openLoginModal();
+    if (errBox) {
+      errBox.textContent = msg || 'Login failure.';
+      errBox.style.display = 'block';
+    } else {
+      console.error('[login] ', msg);
+      alert(msg || 'Login failure.');
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (errBox) { errBox.textContent = ''; errBox.style.display = 'none'; }
+
+    const fd = new FormData(form);
+    const csrf = getCsrf();
+
+    try {
+      const res = await fetch('/login', {
+        method: 'POST',
+        body: fd,
+        headers: Object.assign(
+          {'X-Requested-With': 'XMLHttpRequest'},
+          csrf ? {'X-CSRFToken': csrf} : {}
+        ),
+      });
+
+      // Try to parse JSON; if not JSON, treat as error
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+
+      if (!res.ok || !data || !data.success) {
+        const msg = (data && data.error) || 'Not valid credentials.';
+        showError(msg);
+        return;
+      }
+
+      window.location.href = data.redirect || '/dashboard';
+    } catch (err) {
+      showError('Network error. Retry');
+    }
+  });
+
+  // Expose if you need to open the modal elsewhere
+  window.openLoginModal = openLoginModal;
+})();
+
+
 let currentPage = 0;
 
 function getItemsPerPage(page) {
