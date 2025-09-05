@@ -89,6 +89,17 @@ org = os.getenv("INFLUXDB_ORG")
 bucket = os.getenv("INFLUXDB_BUCKET")
 
 
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            abort(401)
+        if current_user.username != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return wrapper
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
@@ -168,6 +179,96 @@ def login():
             login_user(user)
             return redirect(url_for('index'))
     return render_template('index.html')
+
+@app.route('/users', methods=['GET'])
+@login_required
+def users_page():
+    """Se admin: mostra gestione utenti. Se non admin: mostra pagina cambio password."""
+    if current_user.username == 'admin':
+        users = User.query.order_by(User.username.asc()).all()
+        return render_template('users_admin.html', users=users)
+    else:
+        return render_template('users_profile.html')
+
+@app.route('/api/users', methods=['POST'])
+@login_required
+@admin_required
+def api_create_user():
+    data = request.get_json(silent=True) or request.form
+    username = (data.get('username') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if not username or not password:
+        return jsonify({"error": "Username e password sono obbligatori."}), 400
+    if username.lower() == 'admin':
+        pass
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "Username già esistente."}), 409
+
+    user = User(username=username)
+    user.set_password(password)
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({"message": "User creato", "id": user.id, "username": user.username}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Username già esistente."}), 409
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Errore inatteso."}), 500
+
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def api_delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "Utente non trovato."}), 404
+    if user.username == 'admin':
+        return jsonify({"error": "Non puoi cancellare l'utente admin."}), 400
+    if user.id == current_user.id:
+        return jsonify({"error": "Non puoi cancellare il tuo stesso account."}), 400
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({"message": "Utente eliminato."}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Errore inatteso."}), 500
+
+@app.route('/api/users/change_password', methods=['POST'])
+@login_required
+def api_change_password():
+    """
+    Cambia la password dell'utente corrente.
+    Richiede: current_password, new_password, confirm_password
+    """
+    data = request.get_json(silent=True) or request.form
+    current_password = (data.get('current_password') or '').strip()
+    new_password = (data.get('new_password') or '').strip()
+    confirm_password = (data.get('confirm_password') or '').strip()
+
+    if not current_password or not new_password or not confirm_password:
+        return jsonify({"error": "Tutti i campi sono obbligatori."}), 400
+    if new_password != confirm_password:
+        return jsonify({"error": "Le nuove password non coincidono."}), 400
+    if len(new_password) < 6:
+        return jsonify({"error": "La nuova password deve avere almeno 6 caratteri."}), 400
+
+    if not current_user.check_password(current_password):
+        return jsonify({"error": "Password attuale non corretta."}), 400
+
+    try:
+        current_user.set_password(new_password)
+        db.session.commit()
+        return jsonify({"message": "Password aggiornata con successo."}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"error": "Errore inatteso nell'aggiornamento."}), 500
 
 
 @app.route('/get_airlink/<string:instrument_id>', methods=['GET'])
