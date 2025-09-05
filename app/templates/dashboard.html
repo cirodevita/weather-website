@@ -47,7 +47,7 @@
             <tbody>
                 {% for instrument in instruments %}
                 <tr>
-                    <td>
+                    <td data-order="{% if instrument.status == 'online' %}0{% elif instrument.status == 'maintenance' %}1{% else %}2{% endif %}">
                         {% if instrument.status == 'online' %}
                             <i class="fas fa-check-circle" style="color: green;"></i> Online
                         {% else %}
@@ -61,24 +61,29 @@
                     <td>{{ instrument.organization }}</td>
                     <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>
-		    <td>
-        		{% if instrument.instrument_type in instrument_types %}
-            		  {{ instrument_types[instrument.instrument_type].name }}
-        		{% else %}
-            		  Unknown
-        		{% endif %}
-    		    </td>
+                    <td>
+                        {% if instrument.instrument_type in instrument_types %}
+                            {{ instrument_types[instrument.instrument_type].name }}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </td>
                     <td>
                         <button class="edit-button" data-id="{{ instrument.id }}">Edit</button>
-                        <button class="delete-button" onclick="window.location.href='{{ url_for('delete_instrument', instrument_id=instrument.id) }}'">Remove</button>
+                        <form action="{{ url_for('delete_instrument', instrument_id=instrument.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="delete-button">Remove</button>
+                        </form>
+                        {% if instrument.status == 'online' %}
+                            <button class="data-button" data-id="{{ instrument.id }}">Data</button>
+                        {% endif %}
                     </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </section>
        
-
     <!-- Add/Edit Instrument Modal -->
     <div id="instrument-modal" class="modal">
         <div class="modal-content">
@@ -123,6 +128,38 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Export Data -->
+    <div id="data-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="data-modal-close">&times;</span>
+        <h2>Export data</h2>
+        <form id="data-form">
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+            <div>
+            <label>Start</label>
+            <input type="datetime-local" id="data-start" required>
+            </div>
+            <div>
+            <label>End</label>
+            <input type="datetime-local" id="data-end" required>
+            </div>
+            <div>
+            <label>Interval</label>
+            <select id="data-interval" required>
+                <option value="10">10 min</option>
+                <option value="20">20 min</option>
+                <option value="30">30 min</option>
+            </select>
+            </div>
+        </div>
+        <div style="margin-top:1rem; display:flex; gap:.5rem; justify-content:flex-end;">
+            <button type="button" class="modal-submit-btn" id="data-export-btn">Export</button>
+        </div>
+        </form>
+    </div>
+    </div>
+
 
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>

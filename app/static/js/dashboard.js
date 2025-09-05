@@ -143,7 +143,7 @@ window.onclick = function(event) {
 $(document).ready(function() {
   $('table').DataTable({
       responsive: true,
-      order: [[1, 'asc']],
+      order: [[0, 'asc']],
       paging: true,
       searching: true,
       columnDefs: [
@@ -214,6 +214,91 @@ $(document).ready(function() {
     } catch (err) {
       console.error('Create instrument failed:', err);
       alert('Errore nella creazione dello strumento: ' + err.message);
+    }
+  });
+})();
+
+// ======== DATA EXPORT ========
+(function(){
+  let currentInstrumentId = null;
+  const dataModal = document.getElementById('data-modal');
+  const dataClose = document.getElementById('data-modal-close');
+  const dataStart = document.getElementById('data-start');
+  const dataEnd = document.getElementById('data-end');
+  const dataInterval = document.getElementById('data-interval');
+  const exportBtn = document.getElementById('data-export-btn');
+
+  // Apri modal cliccando sul bottone Data
+  document.querySelectorAll('.data-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentInstrumentId = btn.getAttribute('data-id');
+
+      // default: ultimi 60 minuti, arrotondati alla mezz’ora
+      const now = new Date();
+      const endDefault = new Date(now.getTime() - (now.getSeconds()*1000 + now.getMilliseconds()));
+      const startDefault = new Date(endDefault.getTime() - 60*60*1000);
+
+      dataStart.value = toLocalInputValue(startDefault);
+      dataEnd.value = toLocalInputValue(endDefault);
+      dataInterval.value = "10";
+
+      dataModal.style.display = 'block';
+    });
+  });
+
+  function toLocalInputValue(d){
+    // converte Date -> stringa "YYYY-MM-DDTHH:mm" per input datetime-local
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function toIsoUTC(inputValue){
+    // inputValue è "YYYY-MM-DDTHH:mm" (locale)
+    // lo convertiamo in ISO UTC (Z)
+    const d = new Date(inputValue);
+    return d.toISOString();
+  }
+
+  dataClose && dataClose.addEventListener('click', () => dataModal.style.display = 'none');
+  window.addEventListener('click', (e)=>{ if(e.target === dataModal) dataModal.style.display = 'none'; });
+
+  exportBtn.addEventListener('click', async () => {
+    if(!currentInstrumentId) return;
+
+    const startVal = dataStart.value;
+    const endVal = dataEnd.value;
+    const interval = dataInterval.value;
+
+    if(!startVal || !endVal){
+      alert("Seleziona start ed end.");
+      return;
+    }
+
+    const startISO = toIsoUTC(startVal);
+    const endISO = toIsoUTC(endVal);
+
+    // GET verso /timeseries/<id>?start=...&end=...&interval=...
+    const url = `/timeseries/${encodeURIComponent(currentInstrumentId)}?start=${encodeURIComponent(startISO)}&end=${encodeURIComponent(endISO)}&interval=${encodeURIComponent(interval)}`;
+
+    try {
+      const res = await fetch(url, { method: 'GET' });
+      if(!res.ok){
+        const text = await res.text();
+        throw new Error(text || ('HTTP '+res.status));
+      }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      const href = URL.createObjectURL(blob);
+      a.href = href;
+      const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      a.download = `${currentInstrumentId}_timeseries_${interval}m_${ts}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Errore durante l\'export.');
     }
   });
 })();
