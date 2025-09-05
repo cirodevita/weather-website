@@ -5,3 +5,8 @@ migrations/
 .DS_Store
 static/uploads
 .env
+pwd.txt
+test.py
+
+*.dump
+*.gz
