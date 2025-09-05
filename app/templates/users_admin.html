@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Users</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <style>
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); }
+    .modal-content { background:#fff; max-width:420px; margin:8rem auto; padding:1.25rem; border-radius:8px; }
+    .close { float:right; cursor:pointer; font-size:1.25rem; }
+    .user-row { display:flex; align-items:center; justify-content:space-between; padding:.5rem .75rem; border-bottom:1px solid #eee; }
+    .muted { color:#666; }
+    .btn { padding:.4rem .75rem; border:0; border-radius:6px; cursor:pointer; }
+    .btn-primary { background:#2b7cff; color:#fff; }
+    .btn-danger { background:#ff3b30; color:#fff; }
+    .btn-secondary { background:#e5e5e5; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Users</h1>
+    <div>
+      <a href="{{ url_for('dashboard') }}" class="edit-button">Back to Dashboard</a>
+      <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+    </div>
+  </header>
+
+  <main style="max-width:800px;margin:1rem auto;">
+    <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <h2>User Management</h2>
+      <button id="add-user-btn" class="btn btn-primary">Add user</button>
+    </div>
+
+    <div id="users-list" style="border:1px solid #eee;border-radius:8px;overflow:hidden;">
+      {% for u in users %}
+      <div class="user-row" data-user-id="{{ u.id }}">
+        <div>
+          <strong>{{ u.username }}</strong>
+          {% if u.username == 'admin' %}
+            <span class="muted"> — admin</span>
+          {% elif current_user.id == u.id %}
+            <span class="muted"> — you</span>
+          {% endif %}
+        </div>
+        <div>
+          {% if u.username != 'admin' and current_user.id != u.id %}
+          <button class="btn btn-danger delete-user-btn">Delete</button>
+          {% else %}
+          <button class="btn btn-secondary" disabled>Delete</button>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="margin-top:1rem;text-align:right;">
+      <button id="add-user-btn-bottom" class="btn btn-primary">Add user</button>
+    </div>
+  </main>
+
+  <div id="add-user-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="add-user-close">&times;</span>
+      <h3>Add new user</h3>
+      <form id="add-user-form" method="POST" action="/api/users">
+        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;">
+          <label>Username
+            <input type="text" name="username" id="new-username" required>
+          </label>
+          <label>Password
+            <input type="password" name="password" id="new-password" required minlength="6">
+          </label>
+        </div>
+        <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:flex-end;">
+          <button type="button" class="btn btn-secondary" id="add-user-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/users.js') }}"></script>
+</body>
+</html>

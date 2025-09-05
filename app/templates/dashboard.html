@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Dashboard</h1>
+        <dev>
+            <a href="{{ url_for('users_page') }}" class="edit-button">Users</a>
+            <a href="{{ url_for('index') }}" class="edit-button">Home</a>
+            <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+        </dev>
+    </header>
+
+    <section>
+        <div class="section-header">
+            <h2>Instruments</h2>
+            <div>
+                <button id="add-instrument-btn" class="add-button">Add New Instrument</button>
+                <button id="import-btn" class="import-button">Import</button>
+            </div>
+        </div>
+        <table class="display">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Airlink ID</th>
+                    <th>Image</th>
+                    <th>Organization</th>
+                    <th>Installation Date</th>
+                    <th>Location (Lat, Lon)</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for instrument in instruments %}
+                <tr>
+                    <td>
+                        {% if instrument.status == 'online' %}
+                            <i class="fas fa-check-circle" style="color: green;"></i> Online
+                        {% else %}
+                            <i class="fas fa-times-circle" style="color: red;"></i> Offline
+                        {% endif %}
+                    </td>
+                    <td>{{ instrument.id }}</td>
+                    <td>{{ instrument.name }}</td>
+                    <td>{{ instrument.airlinkID }}</td>
+                    <td><img src="{% if instrument.image %}{{ url_for('static', filename='uploads/' ~ instrument.image) }}{% else %}{{ url_for('static', filename='images/noimage.png') }}{% endif %}" alt="Image" width="50"></td>
+                    <td>{{ instrument.organization }}</td>
+                    <td>{{ instrument.installation_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ instrument.latitude }}, {{ instrument.longitude }}</td>
+		    <td>
+        		{% if instrument.instrument_type in instrument_types %}
+            		  {{ instrument_types[instrument.instrument_type].name }}
+        		{% else %}
+            		  Unknown
+        		{% endif %}
+    		    </td>
+                    <td>
+                        <button class="edit-button" data-id="{{ instrument.id }}">Edit</button>
+                        <button class="delete-button" onclick="window.location.href='{{ url_for('delete_instrument', instrument_id=instrument.id) }}'">Remove</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+       
+
+    <!-- Add/Edit Instrument Modal -->
+    <div id="instrument-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add New Instrument</h2> 
+            <form id="instrument-form" action="/dashboard" method="POST" enctype="multipart/form-data">
+                <label for="id">Instrument ID (Format: it.uniparthenope.meteo.xxx)</label>
+                <input type="text" id="instrument-id" name="id" required>
+
+                <label for="name">Device Name</label>
+                <input type="text" id="name" name="name">
+
+                <label for="airlinkID">Airlink ID</label>
+                <input type="text" id="airlinkID" name="airlinkID">
+
+                <label for="image">Image (Drag and Drop or Click)</label>
+                <div id="drop-area">
+                    <input type="file" id="image" name="image" accept="image/*">
+                </div>
+
+                <label for="organization">Organization</label>
+                <input type="text" id="organization" name="organization" required>
+
+                <label for="installation_date">Installation Date</label>
+                <input type="date" id="installation_date" name="installation_date" required>
+
+                <label for="latitude">Latitude</label>
+                <input type="number" step="any" id="latitude" name="latitude" required>
+
+                <label for="longitude">Longitude</label>
+                <input type="number" step="any" id="longitude" name="longitude" required>
+
+                <label for="instrument_type">Instrument Type</label>
+                <select id="instrument_type" name="instrument_type" required>
+                    <option value="" disabled selected>Select an instrument type</option>
+                    {% for key, value in instrument_types.items() %}
+                        <option value="{{ key }}">{{ value['name'] }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" id="modal-submit-btn" class="modal-submit-btn">Add Instrument</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
