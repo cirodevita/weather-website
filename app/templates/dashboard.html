@@ -73,7 +73,7 @@
                         <form action="{{ url_for('delete_instrument', instrument_id=instrument.id) }}" method="POST" style="display:inline;">
                             <button type="submit" class="delete-button">Remove</button>
                         </form>
-                        {% if instrument.status == 'online' %}
+                        {% if instrument.status == 'online' or 'ws' in instrument.id %}
                             <button class="data-button" data-id="{{ instrument.id }}">Data</button>
                         {% endif %}
                     </td>
