@@ -63,9 +63,11 @@ import time
 import pandas as pd
 
 from config.constants import INSTRUMENT_TYPES, variables_for
+from config.loader import load_aggregation_config
 
 # Load environment configuration
 load_dotenv()
+aggregation_cfg = load_aggregation_config()
 
 app = Flask(__name__)
 
@@ -183,7 +185,8 @@ def create_or_update_instrument(data, is_edit=False):
     image = handle_file_upload(data.get('image'))
 
     if is_edit:
-        instrument = Instrument.query.get(instrument_id)
+        instrument = db.session.get(Instrument, instrument_id)
+
         if not instrument:
             return None
         # Update fields in place (image only if uploaded)
@@ -379,7 +382,7 @@ def get_instruments():
 
         imported_count = 0
         for topic in unique_topics:
-            if not Instrument.query.filter_by(id=topic).first():
+            if not db.session.filter_by(id=topic).first():
                 data = {
                     'id': topic,
                     'name': '',
@@ -401,7 +404,8 @@ def get_instruments():
     query = f"""from(bucket: "{bucket}") |> range(start: -3h) |> last()"""
     tables = query_api.query(query, org=org)
 
-    instruments = Instrument.query.all()
+    instruments = db.session.query(Instrument).all()
+
     instruments_data = []
     for instrument in instruments:
         relevant_variables = instrument.variables.split(", ") if instrument.variables else []
@@ -434,106 +438,76 @@ def get_instruments():
     return jsonify(instruments_data)
 
 
-# CSV export of time series for a given instrument id, with windowed aggregation
+# --- CSV export of time series with aggregation ---
 @app.route('/timeseries/<string:instrument_id>', methods=['GET'])
 @login_required
 def timeseries(instrument_id):
     client = InfluxDBClient(url=inluxdb_url, token=token, org=org)
     query_api = client.query_api()
 
-    # Read time range and sampling interval (supports ISO or epoch seconds)
+    # Parametri input
     start_arg = request.args.get('start')
     end_arg = request.args.get('end')
-    interval = request.args.get('interval', '10')
-    try:
-        interval = int(interval)
-    except ValueError:
-        interval = 10
-    if interval not in (10, 20, 30):
-        interval = 10
+    interval = int(request.args.get('interval', '10') or 10)
     every = f"{interval}m"
 
-    # Helper to parse flexible time inputs
+    now_ts = int(time.time())
+
     def parse_time(val, default_ts):
         if not val:
             return datetime.utcfromtimestamp(default_ts)
-        if isinstance(val, str) and val.isdigit():
+        if val.isdigit():
             return datetime.utcfromtimestamp(int(val))
         return dateparser.parse(val)
 
-    now_ts = int(time.time())
-    start_dt = parse_time(start_arg, now_ts - 10800)  # default last 3 hours
+    start_dt = parse_time(start_arg, now_ts - 10800)
     end_dt = parse_time(end_arg, now_ts)
-
-    # Build time bounds as UTC Zulu
     start_iso = start_dt.replace(tzinfo=None).isoformat() + "Z"
     end_iso = end_dt.replace(tzinfo=None).isoformat() + "Z"
 
-    # Use instrument.variables as favored columns for header order
-    instrument = Instrument.query.get(instrument_id)
+    instrument = db.session.get(Instrument, instrument_id)
+
     if not instrument:
         return jsonify({"error": "Instrument not found"}), 404
 
-    expected = []
-    if instrument.variables:
-        expected = [v.strip() for v in instrument.variables.replace(";", ",").split(",") if v.strip()]
-    expected_set = set(expected)
+    # Query grezza: tutti i dati, senza aggregateWindow
+    query = f"""
+    from(bucket: "{bucket}")
+      |> range(start: {start_iso}, stop: {end_iso})
+      |> filter(fn: (r) => r["topic"] == "{instrument_id}")
+      |> filter(fn: (r) => r._measurement == "mqtt_data")
+      |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"])
+    """
 
-    # Flux query: windowed last value per field, pivot to one row per timestamp
-    query = f'''
-from(bucket: "{bucket}")
-  |> range(start: {start_iso}, stop: {end_iso})
-  |> filter(fn: (r) => r["topic"] == "{instrument_id}")
-  |> filter(fn: (r) => r._measurement == "mqtt_data")
-  |> aggregateWindow(every: {every}, fn: last, createEmpty: true)
-  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-  |> sort(columns: ["_time"])
-'''
     tables = query_api.query(query, org=org)
 
-    # Collect rows and discover all columns dynamically
+    # Ricostruisci DataFrame
     rows = []
-    found_cols = set()
     for table in tables:
         for rec in table.records:
             vals = dict(rec.values)
-            clean = {}
+            row = {"time": vals.get("_time")}
             for k, v in vals.items():
-                if k == "_time":
-                    clean["_time"] = v
-                elif not k.startswith("_") and k not in ("result", "table", "topic", "_measurement", "_start", "_stop"):
-                    clean[k] = v
-            rows.append(clean)
-            found_cols.update([c for c in clean.keys() if c != "_time"])
+                if not k.startswith("_") and k not in ("result", "table", "topic", "_measurement", "_start", "_stop"):
+                    row[k] = v
+            rows.append(row)
 
-    # Header: "time" plus expected (stable order) and any extra discovered fields
-    header_fields = list(expected)
-    extras = sorted(list(found_cols - expected_set))
-    all_fields = header_fields + extras
-    if not all_fields:
-        all_fields = sorted(list(found_cols))
+    if not rows:
+        return jsonify({"error": "No data found"}), 404
 
-    # Stream CSV to client
+    df = pd.DataFrame(rows)
+
+    # Applica la funzione di aggregazione intelligente
+    df_agg = utils.aggregate_weather(df, interval, aggregation_cfg)
+
+    # Esportazione CSV
     out = StringIO()
-    w = csv.writer(out)
-    w.writerow(["time"] + all_fields)
-
-    def row_time_key(r):
-        t = r.get("_time")
-        try:
-            return dateparser.parse(t) if isinstance(t, str) else t
-        except Exception:
-            return t
-
-    for r in sorted(rows, key=row_time_key):
-        t = r.get("_time")
-        t_str = t.isoformat() if isinstance(t, datetime) else (t or "")
-        row = [t_str] + [r.get(col, "") for col in all_fields]
-        w.writerow(row)
-
+    df_agg.to_csv(out, index=False)
     out.seek(0)
-    fname = f"{instrument_id}_timeseries_{interval}m.csv"
-    return Response(out, mimetype="text/csv",
+    fname = f"{instrument_id}_aggregated_{interval}m.csv"
+
+    return Response(out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f"attachment;filename={fname}"})
 
 
@@ -541,7 +515,8 @@ from(bucket: "{bucket}")
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    instruments = Instrument.query.all()
+    instruments = db.session.query(Instrument).all()
+
     return render_template('dashboard.html', instruments=instruments, instrument_types=INSTRUMENT_TYPES)
 
 
@@ -609,7 +584,8 @@ def api_create_instrument():
 @app.route('/api/instruments/<string:instrument_id>', methods=['PATCH', 'PUT', 'DELETE'])
 @login_required
 def api_instrument_detail(instrument_id):
-    inst = Instrument.query.get(instrument_id)
+    instrument = db.session.get(Instrument, instrument_id)
+
     if not inst:
         return jsonify({"error": "Instrument not found"}), 404
 
@@ -680,7 +656,7 @@ def edit_instrument(instrument_id):
 @app.route('/delete/<instrument_id>', methods=['POST', 'GET'])
 @login_required
 def delete_instrument(instrument_id):
-    instrument = Instrument.query.get(instrument_id)
+    instrument = db.session.get(Instrument, instrument_id)
     if instrument:
         db.session.delete(instrument)
         db.session.commit()

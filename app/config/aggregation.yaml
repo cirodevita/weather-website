@@ -1,0 +1,46 @@
+excluded_columns:
+  - ForecastIcon
+  - ForecastRuleNo
+  - StormStartDate
+  - SunRise
+  - SunSet
+  - RainStorm
+  - Datetime
+  - DatetimeWS
+  - ETDay
+  - ETMonth
+  - ETYear
+  - temp
+
+rain_columns:
+  - RainRate
+  - RainDay
+  - RainMonth
+  - RainYear
+
+wind_columns:
+  - WindSpeed
+  - WindDir
+
+units:
+  # Conversioni di unità
+  # fattore: moltiplicazione per passare al formato desiderato
+  Barometer:
+    factor: 33.8639    # da inHg → hPa
+    target_unit: "hPa"
+
+  WindSpeed:
+    factor: 3.6    # da m/s → km/h
+    target_unit: "km/h"
+
+  TempOut:
+    convert: "FtoC"    # Fahrenheit → Celsius
+    target_unit: "°C"
+
+  TempIn:
+    convert: "FtoC"
+    target_unit: "°C"
+
+  temp:
+    convert: "FtoC"
+    target_unit: "°C"
